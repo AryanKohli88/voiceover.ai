@@ -1,3 +1,8 @@
+#
+main/video
+main/test1
+main/merged_004
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
