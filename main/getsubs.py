@@ -1,3 +1,8 @@
+#Goals - 
+# 1. Ideantify different speakers and put their dialogues under their names correctly.
+# 2. Number of speakers should be self identifiable.
+# 3. dialogue change is not always by lower volume, -> speaker identification is imporant
+
 import os
 import speech_recognition as sr
 from pydub import AudioSegment
@@ -50,3 +55,6 @@ def format_time(seconds):
     minutes = int((seconds % 3600) // 60)
     seconds = seconds % 60
     return f"{hours:02d}:{minutes:02d}:{seconds:06.3f}".replace('.', ',')
+
+
+generate_subtitles('./vlog.wav')

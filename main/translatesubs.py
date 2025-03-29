@@ -1,3 +1,9 @@
+# Goals
+# Translation Context should be retained ->
+# 1. Proverbs
+# 2. which word to pause after
+# 3. I have to be able to translate properly, mostly AI will be used here.
+
 import asyncio
 from googletrans import Translator
 
