@@ -4,9 +4,7 @@
 # 3. dialogue change is not always by lower volume, -> speaker identification is imporant
 
 # Issues ->
-# Not complete 
-# not able to distinguish speakers
-
+# deepgram can be used for better seperation of sentences in SRT, but not goof for ideentifying speaker count 
 import os
 import speech_recognition as sr
 from pydub import AudioSegment
