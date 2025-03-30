@@ -3,6 +3,10 @@
 # 2. Number of speakers should be self identifiable.
 # 3. dialogue change is not always by lower volume, -> speaker identification is imporant
 
+# Issues ->
+# Not complete 
+# not able to distinguish speakers
+
 import os
 import speech_recognition as sr
 from pydub import AudioSegment
@@ -57,4 +61,5 @@ def format_time(seconds):
     return f"{hours:02d}:{minutes:02d}:{seconds:06.3f}".replace('.', ',')
 
 
-generate_subtitles('./vlog.wav')
+subtitles = generate_subtitles('./outputwav_000.wav')
+write_srt(subtitles, "original_subtitles.srt")
