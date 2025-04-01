@@ -1,20 +1,16 @@
 const { createClient } = require("@deepgram/sdk");
 const fs = require("fs");
-require("dotenv").config(); // Use a .env file to store your API key
+require("dotenv").config();
 
-const DEEPGRAM_API_KEY = process.env.API_KEY; //process.env.DEEPGRAM_API_KEY; // Store API key in .env file
-const AUDIO_FILE_PATH = "../outputwav_002.wav"; // Path to your audio file
+const DEEPGRAM_API_KEY = process.env.API_KEY; 
+const AUDIO_FILE_PATH = "../outputwav_002.wav"; 
 
 
 const transcribeFile = async () => {
-  // STEP 1: Create a Deepgram client using the API key
   const deepgram = createClient(DEEPGRAM_API_KEY);
 
-  // STEP 2: Call the transcribeFile method with the audio payload and options
   const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
-    // path to the audio file
     fs.readFileSync(AUDIO_FILE_PATH),
-    // STEP 3: Configure Deepgram options for audio analysis
     {
       model: "nova-3",
       smart_format: true,
@@ -23,7 +19,6 @@ const transcribeFile = async () => {
   );
 
   if (error) throw error;
-  // STEP 4: Print the results
   if (!error) {
     let op = "Para 1 - \n";
     console.dir(result, { depth: null });

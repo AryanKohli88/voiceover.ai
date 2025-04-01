@@ -3,6 +3,11 @@ main/video.mp4
 main/test1
 main/merged_004.wav
 
+transcript.txt
+
+.env
+node_modules
+outputwav_*.wav
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
