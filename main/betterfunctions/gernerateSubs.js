@@ -8,7 +8,6 @@ const AUDIO_FILE_PATH = "../outputwav_002.wav";
 
 const transcribeFile = async () => {
   const deepgram = createClient(DEEPGRAM_API_KEY);
-
   const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
     fs.readFileSync(AUDIO_FILE_PATH),
     {
