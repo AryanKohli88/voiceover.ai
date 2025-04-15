@@ -4,8 +4,10 @@ main/test1
 main/merged_004.wav
 
 transcript.txt
+*.wav
 
 .env
+*/.env
 node_modules
 outputwav_*.wav
 # Byte-compiled / optimized / DLL files
