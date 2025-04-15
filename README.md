@@ -14,7 +14,10 @@ Now, hop_length for MFCC is the number of samples between two columns (frames).
 # Nyquist theorem 
 To reconstruct a signal of freq w, our sampling frequency has to be > 2*w; {Note its > and not even >=};
 
-Progress  -
+# Next - 
+Understand -  save_segmented_audio
+
+# Progress  -
 1. betterfunctions/generatesubs can generate accurate subs
 2. ```demucs .\outputwav_002.wav``` will seperate tracks and vocals.  (needs - pip install demucs torchaudio soundfile and/or conda install -c conda-forge libsndfile )
 3. improve seperatespeakers for seperating speakers
