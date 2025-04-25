@@ -1,50 +1,37 @@
 from pyannote.audio import Pipeline
 from pydub import AudioSegment
 import os
-from huggingface_hub import login
+from dotenv import load_dotenv
+load_dotenv()
+# 1. Initialize diarization pipeline
+# hf_token=os.getenv("HF_TOKEN")
+pipeline = Pipeline.from_pretrained(
+    "pyannote/speaker-diarization-3.1",
+    use_auth_token=os.getenv("HF_TOKEN")
+)
 
-# === CONFIGURATION ===
-AUDIO_PATH = "../seperated/htdemucs/outputwav_002/vocals.wav"  # Input mono WAV file
-OUTPUT_DIR = "split_speakers"  # Folder to save speaker tracks
-MODEL_NAME = "pyannote/speaker-diarization"
+# 2. Process audio file
+audio_file = "./vocals.wav"
+diarization = pipeline(audio_file)
 
-# === STEP 1: Load pipeline ===
-print("Loading diarization pipeline...")
-# pipeline = Pipeline.from_pretrained(MODEL_NAME)
-login("token")  # only needed once per session
+# 3. Load original audio
+full_audio = AudioSegment.from_wav(audio_file)
 
-pipeline = Pipeline.from_pretrained(MODEL_NAME, use_auth_token="token")
+# 4. Create speaker-specific tracks
+speaker_tracks = {
+    "SPEAKER_00": AudioSegment.silent(duration=len(full_audio)),
+    "SPEAKER_01": AudioSegment.silent(duration=len(full_audio))
+}
 
-# === STEP 2: Run diarization ===
-print("Running speaker diarization...")
-diarization = pipeline(AUDIO_PATH)
-
-# === STEP 3: Load audio ===
-print("Loading original audio...")
-audio = AudioSegment.from_wav(AUDIO_PATH)
-
-# === STEP 4: Create output folder ===
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-# === STEP 5: Split and save per speaker ===
-speaker_segments = {}
-
-for turn, _, speaker in diarization.itertracks(yield_label=True):
-    start_ms = int(turn.start * 1000)
-    end_ms = int(turn.end * 1000)
-
-    segment = audio[start_ms:end_ms]
+# 5. Populate speaker tracks
+for segment, _, speaker in diarization.itertracks(yield_label=True):
+    start_ms = int(segment.start * 1000)
+    end_ms = int(segment.end * 1000)
+    segment_audio = full_audio[start_ms:end_ms]
     
-    if speaker not in speaker_segments:
-        speaker_segments[speaker] = segment
-    else:
-        speaker_segments[speaker] += segment
+    if speaker in speaker_tracks:
+        speaker_tracks[speaker] = speaker_tracks[speaker].overlay(segment_audio, position=start_ms)
 
-# === STEP 6: Export audio files ===
-print("Saving individual speaker files...")
-for speaker, segment in speaker_segments.items():
-    output_path = os.path.join(OUTPUT_DIR, f"{speaker}.wav")
-    segment.export(output_path, format="wav")
-    print(f"Saved: {output_path}")
-
-print("✅ Done!")
+# 6. Export results
+speaker_tracks["SPEAKER_00"].export("speaker1.wav", format="wav")
+speaker_tracks["SPEAKER_01"].export("speaker2.wav", format="wav")

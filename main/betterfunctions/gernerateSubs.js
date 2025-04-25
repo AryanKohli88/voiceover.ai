@@ -1,13 +1,21 @@
+const AUDIO_FILE_PATH = "../separated/htdemucs/outputwav_002/speaker1.wav"; 
+
 const { createClient } = require("@deepgram/sdk");
 const fs = require("fs");
 require("dotenv").config();
 
-const DEEPGRAM_API_KEY = process.env.API_KEY; 
-const AUDIO_FILE_PATH = "../outputwav_002.wav"; 
-
+// Helper function to convert seconds to SRT timestamp format
+function secondsToSrtTime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  const ms = Math.round((seconds - Math.floor(seconds)) * 1000);
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+}
 
 const transcribeFile = async () => {
-  const deepgram = createClient(DEEPGRAM_API_KEY);
+  const deepgram = createClient(process.env.API_KEY);
+  
   const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
     fs.readFileSync(AUDIO_FILE_PATH),
     {
@@ -18,21 +26,29 @@ const transcribeFile = async () => {
   );
 
   if (error) throw error;
-  if (!error) {
-    let op = "Para 1 - \n";
-    console.dir(result, { depth: null });
 
-    let output = result.results.channels[0].alternatives[0].paragraphs.paragraphs;
-    if (!output || !Array.isArray(output)) {
-        throw new Error("No paragraphs found.");
-      }
-    let i = 1;
-    output.forEach(paragraph => {
-        i++;
-        op += paragraph.sentences.map(sentence => sentence.text).join(" ") + "\n\nPara " + i + " - \n";
+  let srtContent = "";
+  let counter = 1;
+  
+  const paragraphs = result.results.channels[0].alternatives[0].paragraphs.paragraphs;
+  
+  paragraphs.forEach(paragraph => {
+    paragraph.sentences.forEach(sentence => {
+      // Convert timestamps
+      const startTime = secondsToSrtTime(sentence.start);
+      const endTime = secondsToSrtTime(sentence.end);
+      
+      // Build SRT block
+      srtContent += `${counter}\n`;
+      srtContent += `${startTime} --> ${endTime}\n`;
+      srtContent += `${sentence.text}\n\n`;
+      
+      counter++;
     });
-    fs.writeFileSync("transcript.txt", op)
-    }
+  });
+
+  fs.writeFileSync("speaker1.srt", srtContent);
+  console.log("SRT file generated successfully!");
 };
 
 transcribeFile();
