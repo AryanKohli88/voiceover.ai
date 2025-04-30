@@ -32,3 +32,5 @@ def generate_voice_overs(translated_subtitles, output_file):
     combined_audio.export(output_path, format="wav")
 
     return output_path
+
+README.md

@@ -5,6 +5,7 @@ main/merged_004.wav
 
 transcript.txt
 *.wav
+*/.env
 
 .env
 */.env
