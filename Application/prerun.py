@@ -14,9 +14,6 @@ voices = engine.getProperty('voices')
 # select index of voice from installed voices
 # try with voice index 0, 1 and null
 
-# -------------------------------
-# Step 0: GPU Check using torch
-# -------------------------------
 def check_gpu():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -25,9 +22,7 @@ def check_gpu():
         print("Exiting the program.")
         sys.exit()
 
-# -------------------------------
-# Utility Functions
-# -------------------------------
+
 video_folder = "video"
 video_extensions = ['.mp4', '.mkv', '.mov', '.avi', '.webm']
 audio_extensions = ['.mp3', '.aac', '.ogg', '.flac', '.wav']
@@ -62,14 +57,14 @@ def check_and_install_demucs():
 # Main Logic
 # -------------------------------
 def main():
-    check_gpu()  # Step 0: GPU test
+    # check_gpu()
     min_rate = input("Minimum rate of speech? (recommended: 180, default: 120 ) : ").strip().lower()
     if not min_rate:
         min_rate = 120
 
+    voice_index = 2
     voice_index = input("What is the index of microsoft hindi voice? (make sure hindi voice is installed): ").strip().lower()
 
-    # Check if input is empty or non-numeric
     if not voice_index.isdigit():
         voice_index = -1
     else:
