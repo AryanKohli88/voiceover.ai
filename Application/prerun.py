@@ -7,6 +7,13 @@ import pyttsx3
 
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
+session_id = os.environ.get("SESSION_ID")
+video_dir = os.path.join("video", session_id)
+# result_dir = os.path.join("result", session_id)
+# stems_dir = os.path.join("separated", "htdemucs", session_id)
+
+# input_audio = os.path.join(video_dir, "audio.wav")
+# output_audio = os.path.join(result_dir, "HindiAudio1.wav")
 
 
 # what if already existing audio file is not audio.wav?
@@ -23,7 +30,7 @@ def check_gpu():
         sys.exit()
 
 
-video_folder = "video"
+# video_folder = "video"
 video_extensions = ['.mp4', '.mkv', '.mov', '.avi', '.webm']
 audio_extensions = ['.mp3', '.aac', '.ogg', '.flac', '.wav']
 
@@ -56,58 +63,35 @@ def check_and_install_demucs():
 # -------------------------------
 # Main Logic
 # -------------------------------
+def is_valid_integer(value):
+    return value.isdigit() and int(value) > 0
+
 def main():
-    # check_gpu()
-    min_rate = input("Minimum rate of speech? (recommended: 180, default: 120 ) : ").strip().lower()
-    if not min_rate:
-        min_rate = 120
-
+    min_rate = 180
     voice_index = 2
-    voice_index = input("What is the index of microsoft hindi voice? (make sure hindi voice is installed): ").strip().lower()
-
-    if not voice_index.isdigit():
-        voice_index = -1
+    if len(sys.argv) >= 3 and is_valid_integer(sys.argv[1]) and is_valid_integer(sys.argv[2]):
+        min_rate = sys.argv[1]
+        voice_index = sys.argv[2]
     else:
-        voice_index = int(voice_index)
-
-    if not voice_index:
-        voice_index=2
-    if not voice_index < len(voices):
-        print(f"Invalid voice index: {voice_index}. Available range is 0 to {len(voices)-1}")
-
-    # Step 1: Locate video/audio file
-    if not os.path.exists(video_folder):
-        print(f"Folder '{video_folder}' does not exist.")
+        print("Usage: invalid values for <min_rate> and <voice_index>")
         return
+    
+    print(f"Using values {min_rate} and {voice_index}")
 
-    files = os.listdir(video_folder)
-    target_audio_path = os.path.join(video_folder, "audio.wav")
-
-    found_file = False
-    for file in files:
-        file_path = os.path.join(video_folder, file)
-        if is_video_file(file):
-            convert_video_to_audio(file_path, target_audio_path)
-            found_file = True
-            break
-        elif is_audio_file(file):
-            print(f"Found audio file: {file}. Copying to audio.wav.")
-            shutil.copy(file_path, target_audio_path)
-            found_file = True
-            break
-
-    if not found_file:
-        print("No audio or video file found in the folder.")
-        return
-
+    target_audio_path = os.path.join(video_dir, f"{session_id}.wav")
+    print("Using Demucs")
     # Step 2: Ensure demucs is installed
     check_and_install_demucs()
 
     # Step 3: Run demucs
     run_command(f'demucs "{target_audio_path}"')
+    print("Demucsing completed")
 
     # Step 4: Run generateSubs.py
+    print("calling generate subs")
     run_command("python generateSubs.py")
+    print("completed generate subs")
+  
     run_command(f'python genVoices.py {min_rate} {voice_index}')
 
 if __name__ == "__main__":

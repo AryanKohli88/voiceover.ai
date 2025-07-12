@@ -9,10 +9,10 @@ import time
 # from IPython.display import display, HTML, Markdown
 
 load_dotenv()
-AUDIO_FILE_PATH = "./separated/htdemucs/audio/vocals.wav"
 API_KEY = os.getenv("API_KEY")
+SESSION_ID = os.getenv("SESSION_ID")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
+AUDIO_FILE_PATH = f"./separated/htdemucs/{SESSION_ID}/vocals.wav"
 
 def read_srt_file(file_path):
     lines = []
@@ -151,7 +151,7 @@ def transcribe_file(outputsrtfile):
 
     lines = read_srt_file(outputsrtfile) # all dialogues in array
     new_lines = translate_lines_to_hindi(lines, chat)
-    write_translated_srt(outputsrtfile, new_lines, "./newsubs.srt")
+    write_translated_srt(outputsrtfile, new_lines, f"./separated/htdemucs/{SESSION_ID}/{SESSION_ID}_translated.srt")
 
 if __name__ == "__main__":
-    transcribe_file("subtitles.srt")
+    transcribe_file(f"./separated/htdemucs/{SESSION_ID}/{SESSION_ID}.srt")

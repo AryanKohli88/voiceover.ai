@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import sys
 # import asyncio
 # from googletrans import Translator
+SESSION_ID = os.getenv("SESSION_ID")
 
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -48,7 +49,7 @@ def parse_srt_file(file_path):
 
 def generate_voice_overs(translated_subtitles, output_file, mini_rate, voice_index):
     # Create the 'result' folder if it doesn't exist
-    output_folder = "result"
+    output_folder = f"result/{SESSION_ID}"
     os.makedirs(output_folder, exist_ok=True)
 
     engine = pyttsx3.init()
@@ -102,7 +103,7 @@ if len(sys.argv) > 1:
 else:
     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
-newsubs_parsed = parse_srt_file('./newsubs.srt')
-generate_voice_overs(newsubs_parsed, "HindiAudio1.wav", mini_rate, voice_index)
+newsubs_parsed = parse_srt_file(f"./separated/htdemucs/{SESSION_ID}/{SESSION_ID}_translated.srt")
+generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, voice_index)
 print('➡️ Next command to run:')
 print('svc infer result/HindiAudio1.wav -m G_70.pth -c config.json')
