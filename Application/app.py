@@ -2,23 +2,26 @@ import streamlit as st
 import subprocess
 import os
 import uuid
+session_id = str(uuid.uuid4())[:8]
 
-# UI
+from prerun import main_func
+
 st.title("Audio Processing App")
 
 # 1. Secret Keys Input
-secret_key_1 = st.text_input("Enter Deepgram API Key", type="password")
-secret_key_2 = st.text_input("Enter Google API Key", type="password")
-min_rate = st.text_input("Enter minimum rate of speech (default 180)", type="default")
-voice_index = st.text_input("Enter voice index (default 2)", type="default")
-print("Got keys")
+deep_key = st.text_input("Enter Deepgram API Key", type="password")
+google_key = st.text_input("Enter Google API Key", type="password")
+min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
+voice_index_ip = st.text_input("Enter voice index (Recommended value - 2)", type="default")
 
 # 2. File Upload
 uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "m4a", "mp4"])
 print("Uploaded file")
 
+print("Got keys")
+
 @st.fragment    
-def process_audio(secret_key_1, secret_key_2, uploaded_file, min_rate, voice_index):
+def process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_ip):
     """
     Handles audio processing workflow:
     - Checks for required inputs
@@ -27,13 +30,11 @@ def process_audio(secret_key_1, secret_key_2, uploaded_file, min_rate, voice_ind
     - Runs prerun.py
     - Displays and allows download of results and stems
     """
-    if not (secret_key_1 and secret_key_2 and uploaded_file):
-        st.warning("Please provide both secret keys and upload a file.")
+    if not (deep_key and google_key and uploaded_file and min_rate_ip and voice_index_ip):
+        st.warning("Please provide all values and upload a file.")
         return
 
     print("starting to process audio file")
-    # Generate a unique session ID
-    session_id = str(uuid.uuid4())[:8]
 
     # Define directories based on session ID
     video_dir = os.path.join("video", session_id)
@@ -50,19 +51,12 @@ def process_audio(secret_key_1, secret_key_2, uploaded_file, min_rate, voice_ind
     with open(input_path, "wb") as f:
         f.write(uploaded_file.read())
 
-    # Pass environment variables (including session ID)
-    env = os.environ.copy()
-    env["API_KEY"] = secret_key_1
-    env["GOOGLE_API_KEY"] = secret_key_2
-    env["SESSION_ID"] = session_id
-
     # Run prerun.py
     st.info("Processing... Please wait.")
-    result = subprocess.run(
-        ["python", "prerun.py", min_rate, voice_index],
-        env=env
-    )
 
+    result = main_func(min_rate_ip, voice_index_ip, session_id, deep_key, google_key)
+    st.info(result)
+        
     # Check if output exists
     result_path = os.path.join(result_dir, "HindiAudio.wav")
     if os.path.exists(result_path):
@@ -72,11 +66,6 @@ def process_audio(secret_key_1, secret_key_2, uploaded_file, min_rate, voice_ind
         with open(result_path, "rb") as audio_file:
             audio_bytes = audio_file.read()
             st.audio(audio_bytes, format="audio/wav")
-            # st.download_button(
-            #     label="Download Processed Audio",
-            #     data=audio_bytes,
-            #     file_name="processed_audio.wav"
-            # )
 
         # Download options for stems
         stems = ["bass.wav", "drums.wav", "other.wav", "vocals.wav"]
@@ -92,15 +81,9 @@ def process_audio(secret_key_1, secret_key_2, uploaded_file, min_rate, voice_ind
                 with open(stem_path, "rb") as f:
                     file_data = f.read()
                 st.audio(file_data, format="audio/wav")
-                # st.download_button(
-                #     label=f"Download {renamed_labels[stem]}",
-                #     data=file_data,
-                #     file_name=renamed_labels[stem],
-                #     key=f"download_{session_id}_{stem}"
-                # )
     else:
-        st.error(f"Processing failed. File not found at '{result_path}'")
+        st.error(f"Processing failed. File not found at '{result_path}'. \nIn case of any issue please save this sessions id - {session_id}. This helps.")
 
 
 if st.button("Process Audio"):
-    process_audio(secret_key_1, secret_key_2, uploaded_file, min_rate, voice_index)
+    process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_ip)

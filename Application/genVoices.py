@@ -4,9 +4,6 @@ from pydub import AudioSegment
 import re
 from datetime import datetime, timedelta
 import sys
-# import asyncio
-# from googletrans import Translator
-SESSION_ID = os.getenv("SESSION_ID")
 
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -47,9 +44,9 @@ def parse_srt_file(file_path):
 
     return parsed_subtitles
 
-def generate_voice_overs(translated_subtitles, output_file, mini_rate, voice_index):
+def generate_voice_overs(translated_subtitles, output_file, mini_rate, voice_index, session_id):
     # Create the 'result' folder if it doesn't exist
-    output_folder = f"result/{SESSION_ID}"
+    output_folder = f"result/{session_id}"
     os.makedirs(output_folder, exist_ok=True)
 
     engine = pyttsx3.init()
@@ -66,25 +63,18 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, voice_ind
             continue
         rate = int((word_count * 60) / duration_sec)
         rate = max(mini_rate, min(rate, 300)) # minimin rate value here is 180
-        # print("rate :: " + str(rate))
-        # print("start :: "+ str(start))
-        # print("end :: "+ str(end))
 
         engine.setProperty('rate', rate)
-        # engine.setProperty('voice', voices[int(speaker[-1]) - 1].id)
         engine.setProperty('voice', voices[voice_index].id)
         temp_voice_path = os.path.join(output_folder, 'temp_voice.wav')
         engine.save_to_file(text, temp_voice_path)
         engine.runAndWait()
-        # print("length till now " + str(len(combined_audio)) )
         voice_over = AudioSegment.from_wav(temp_voice_path)
         trimmed_audio = voice_over[:-int(420)] # triming 420 mili seconds (10 frames for 24 fps) of silence
         silence_duration = start * 1000 - len(combined_audio)
         if silence_duration > 0:
             combined_audio += AudioSegment.silent(duration=silence_duration)
         combined_audio += trimmed_audio
-        # print("silence of :: " + str(silence_duration))
-        # Remove the temporary voice file
         os.remove(temp_voice_path)
     
     # Save the final output in the result folder
@@ -103,7 +93,9 @@ if len(sys.argv) > 1:
 else:
     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
-newsubs_parsed = parse_srt_file(f"./separated/htdemucs/{SESSION_ID}/{SESSION_ID}_translated.srt")
-generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, voice_index)
-print('➡️ Next command to run:')
-print('svc infer result/HindiAudio1.wav -m G_70.pth -c config.json')
+def genvoices(final_subs, mini_rate, voice_index, session_id):
+    newsubs_parsed = parse_srt_file(final_subs)
+    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, voice_index, session_id)
+    print('➡️ Next command to run:')
+    print('svc infer result/HindiAudio1.wav -m G_70.pth -c config.json')
+    return 'success'

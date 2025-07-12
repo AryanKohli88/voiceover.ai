@@ -1,18 +1,9 @@
 import os
 import requests
 import time
-from dotenv import load_dotenv
 from google import genai
-# from google.genai import types
 import time
-# from google.genai.types import GenerateContentConfig, Tool
-# from IPython.display import display, HTML, Markdown
 
-load_dotenv()
-API_KEY = os.getenv("API_KEY")
-SESSION_ID = os.getenv("SESSION_ID")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-AUDIO_FILE_PATH = f"./separated/htdemucs/{SESSION_ID}/vocals.wav"
 
 def read_srt_file(file_path):
     lines = []
@@ -34,21 +25,17 @@ def read_srt_file(file_path):
 
 
 def translate_lines_to_hindi(subtitles, chat, delay=7):
-    translated = []
+    translated = ''
     try:
-      for i, line in enumerate(subtitles):
-         print(f"translated {i}")
-         try:
-               response = chat.send_message(line)
-               reply = response.text.strip()
-               translated.append(reply)
-         except Exception as e:
-               print(f"Error on line {i+1}: {e}")
-               translated.append("") 
-         time.sleep(delay)
+      response = chat.send_message(subtitles)
+      reply = response.text.strip()
+      translated = reply
+    except Exception as e:
+      print(f"Error on line {subtitles}: {e}")
     finally:
-      print(f"\n✅ Translation stopped or completed. {len(translated)} lines translated.")
-
+      print(f"Translation stopped or completed.")
+    
+    time.sleep(delay) # to stay in free limit of gemini API.
     return translated
 
 def write_translated_srt(original_path, translated_lines, output_path="output_translated.srt"):
@@ -101,12 +88,13 @@ def seconds_to_srt_time(seconds):
     ms = int(round((seconds - int(seconds)) * 1000))
     return f"{hours:02}:{minutes:02}:{secs:02},{ms:03}"
 
-def transcribe_file(outputsrtfile):
+def transcribe_file(outputsrtfile, session_id, deep_key, google_key):
+    AUDIO_FILE_PATH = f"./separated/htdemucs/{session_id}/vocals.wav"
     with open(AUDIO_FILE_PATH, 'rb') as audio:
         response = requests.post(
             'https://api.deepgram.com/v1/listen',
             headers={
-                'Authorization': f'Token {API_KEY}',
+                'Authorization': f'Token {deep_key}',
                 'Content-Type': 'audio/wav'
             },
             params={
@@ -118,6 +106,7 @@ def transcribe_file(outputsrtfile):
         )
 
     if response.status_code != 200:
+        return f"Deepgram API error: {response.text}"
         raise Exception(f"Deepgram API error: {response.text}")
 
     result = response.json()
@@ -126,22 +115,8 @@ def transcribe_file(outputsrtfile):
     srt_content = ""
     counter = 1
 
-    for paragraph in paragraphs:
-        for sentence in paragraph['sentences']:
-            start = seconds_to_srt_time(sentence['start'])
-            end = seconds_to_srt_time(sentence['end'])
-            text = sentence['text']
-
-            srt_content += f"{counter}\n{start} --> {end}\n{text}\n\n"
-            counter += 1
-
-    with open(outputsrtfile, "w", encoding="utf-8") as srt_file:
-        srt_file.write(srt_content)
-
-    print("SRT file generated successfully!")
-    
     client = genai.Client(
-    api_key=GOOGLE_API_KEY,
+    api_key=google_key,
     )
 
     chat = client.chats.create(model="gemini-2.0-flash")
@@ -149,9 +124,17 @@ def transcribe_file(outputsrtfile):
     response = chat.send_message(initial_prompt)
     print(response.text)
 
-    lines = read_srt_file(outputsrtfile) # all dialogues in array
-    new_lines = translate_lines_to_hindi(lines, chat)
-    write_translated_srt(outputsrtfile, new_lines, f"./separated/htdemucs/{SESSION_ID}/{SESSION_ID}_translated.srt")
+    for paragraph in paragraphs:
+        for sentence in paragraph['sentences']:
+            start = seconds_to_srt_time(sentence['start'])
+            end = seconds_to_srt_time(sentence['end'])
+            text = sentence['text']
+            translated_text = translate_lines_to_hindi(text, chat)
 
-if __name__ == "__main__":
-    transcribe_file(f"./separated/htdemucs/{SESSION_ID}/{SESSION_ID}.srt")
+            srt_content += f"{counter}\n{start} --> {end}\n{translated_text}\n\n"
+            counter += 1
+
+    with open(outputsrtfile, "w", encoding="utf-8") as srt_file:
+        srt_file.write(srt_content)
+
+    return 'Success'

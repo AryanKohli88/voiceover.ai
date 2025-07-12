@@ -4,17 +4,12 @@ import sys
 import shutil
 import torch
 import pyttsx3
+import shutil
+from generateSubs import transcribe_file
+from genVoices import genvoices
 
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
-session_id = os.environ.get("SESSION_ID")
-video_dir = os.path.join("video", session_id)
-# result_dir = os.path.join("result", session_id)
-# stems_dir = os.path.join("separated", "htdemucs", session_id)
-
-# input_audio = os.path.join(video_dir, "audio.wav")
-# output_audio = os.path.join(result_dir, "HindiAudio1.wav")
-
 
 # what if already existing audio file is not audio.wav?
 # option to add speed of voices
@@ -55,10 +50,11 @@ def convert_video_to_audio(video_path, audio_path):
 def check_and_install_demucs():
     try:
         subprocess.run(["demucs", "--help"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print("✅ Demucs is already installed.")
+        print("Demucs is already installed.")
     except FileNotFoundError:
-        print("❌ Demucs not found. Installing...")
+        print("Demucs not found. Installing...")
         run_command("pip install demucs")
+        return 'Demucs not found. Please try again after 20 minutes'
 
 # -------------------------------
 # Main Logic
@@ -66,35 +62,52 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main():
-    min_rate = 180
-    voice_index = 2
-    if len(sys.argv) >= 3 and is_valid_integer(sys.argv[1]) and is_valid_integer(sys.argv[2]):
-        min_rate = sys.argv[1]
-        voice_index = sys.argv[2]
-    else:
-        print("Usage: invalid values for <min_rate> and <voice_index>")
-        return
+def main_func(min_rate_ip, voice_index_ip, session_id, deep_key, google_key):
+    if not is_valid_integer(min_rate_ip) or not is_valid_integer(voice_index_ip):
+        return 'invalid values for <min_rate> and/or <voice_index>'
     
-    print(f"Using values {min_rate} and {voice_index}")
+    min_rate = int(min_rate_ip)
+    voice_index = int(voice_index_ip)
+
+    video_dir = os.path.join("video", session_id)
+
+    print(f"Using values {min_rate} and {voice_index} for {session_id}")
 
     target_audio_path = os.path.join(video_dir, f"{session_id}.wav")
     print("Using Demucs")
-    # Step 2: Ensure demucs is installed
+
     check_and_install_demucs()
 
-    # Step 3: Run demucs
     run_command(f'demucs "{target_audio_path}"')
     print("Demucsing completed")
 
+    # TO DELETE DEMUCS AUDIOS
+    # if os.path.exists(video_dir):
+    #     try:
+    #         shutil.rmtree(video_dir)
+    #         print(f"Deleted existing directory: {video_dir}")
+    #     except Exception as e:
+    #         print(f"Could not delete existing directory: {e}")
+
     # Step 4: Run generateSubs.py
     print("calling generate subs")
-    run_command("python generateSubs.py")
-    print("completed generate subs")
+    
+    t_subs_path = f"./separated/htdemucs/{session_id}"
+    op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key)
+    if(op.strip().lower() != 'success'):
+        return op
+    print(f'completed generate subs at - {t_subs_path}')
   
-    run_command(f'python genVoices.py {min_rate} {voice_index}')
+    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, voice_index, session_id)
+    if os.path.exists(t_subs_path):
+        try:
+            shutil.rmtree(t_subs_path)
+            print(f"Deleted existing directory: {t_subs_path}")
+        except Exception as e:
+            print(f"Could not delete existing directory: {e}")
+
 
 if __name__ == "__main__":
-    main()
+    main_func()
 
 
