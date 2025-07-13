@@ -58,7 +58,7 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main_func(min_rate_ip, session_id, deep_key, google_key):
+def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar):
     if not is_valid_integer(min_rate_ip):
         return 'invalid values for <min_rate>'
     
@@ -70,11 +70,13 @@ def main_func(min_rate_ip, session_id, deep_key, google_key):
 
     target_audio_path = os.path.join(video_dir, f"{session_id}.wav")
     print("Using Demucs")
+    progress_bar.progress(10)
 
     check_and_install_demucs()
 
     run_command(f'demucs "{target_audio_path}"')
     print("Demucsing completed")
+    progress_bar.progress(40)
 
     # TO DELETE original audio file
     if os.path.exists(video_dir):
@@ -88,12 +90,17 @@ def main_func(min_rate_ip, session_id, deep_key, google_key):
     print("calling generate subs")
     
     t_subs_path = f"./separated/htdemucs/{session_id}"
-    op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key)
+    op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key, progress_bar)
+    progress_bar.progress(80)
+    
     if(op.strip().lower() != 'success'):
         return op
     print(f'completed generate subs at - {t_subs_path}')
-  
+
+    progress_bar.progress(90)
     genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, session_id)
+    progress_bar.progress(100)
+
     # if os.path.exists(t_subs_path):
     #     try:
     #         shutil.rmtree(t_subs_path)

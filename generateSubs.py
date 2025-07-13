@@ -88,7 +88,7 @@ def seconds_to_srt_time(seconds):
     ms = int(round((seconds - int(seconds)) * 1000))
     return f"{hours:02}:{minutes:02}:{secs:02},{ms:03}"
 
-def transcribe_file(outputsrtfile, session_id, deep_key, google_key):
+def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_bar):
     AUDIO_FILE_PATH = f"./separated/htdemucs/{session_id}/vocals.wav"
     with open(AUDIO_FILE_PATH, 'rb') as audio:
         response = requests.post(
@@ -107,13 +107,14 @@ def transcribe_file(outputsrtfile, session_id, deep_key, google_key):
 
     if response.status_code != 200:
         return f"Deepgram API error: {response.text}"
-        raise Exception(f"Deepgram API error: {response.text}")
 
     result = response.json()
     paragraphs = result['results']['channels'][0]['alternatives'][0]['paragraphs']['paragraphs']
     
     srt_content = ""
     counter = 1
+
+    progress_bar.progress(55)
 
     client = genai.Client(
     api_key=google_key,

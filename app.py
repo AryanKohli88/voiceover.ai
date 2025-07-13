@@ -50,8 +50,9 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
 
     # Run prerun.py
     st.info("Processing... Please wait.")
+    progress_bar = st.progress(0)
 
-    result = main_func(min_rate_ip, session_id, deep_key, google_key)
+    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar)
     st.info(result)
         
     # Check if output exists
@@ -66,12 +67,12 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
 
         # Download options for stems
         stems = ["bass.wav", "drums.wav", "other.wav", "vocals.wav"]
-        renamed_labels = {
-            "vocals.wav": "original_speech.wav",
-            "bass.wav": "bass.wav",
-            "drums.wav": "drums.wav",
-            "other.wav": "other.wav"
-        }
+        # renamed_labels = {
+        #     "vocals.wav": "original_speech.wav",
+        #     "bass.wav": "bass.wav",
+        #     "drums.wav": "drums.wav",
+        #     "other.wav": "other.wav"
+        # }
         for stem in stems:
             stem_path = os.path.join(stems_dir, stem)
             if os.path.exists(stem_path):
