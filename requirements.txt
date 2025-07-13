@@ -1,0 +1,8 @@
+streamlit
+requests
+google-generativeai
+google-genai
+pyttsx3
+pydub
+gTTS
+torch

@@ -5,9 +5,8 @@ import re
 from datetime import datetime, timedelta
 import sys
 from gtts import gTTS
-from pydub import AudioSegment
-import os
 import subprocess
+
 
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -48,8 +47,8 @@ def parse_srt_file(file_path):
 
     return parsed_subtitles
 
-
-def generate_voice_overs(translated_subtitles, output_file, mini_rate, voice_index, session_id):
+def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_id):
+    # Create the 'result' folder if it doesn't exist
     output_folder = f"result/{session_id}"
     os.makedirs(output_folder, exist_ok=True)
 
@@ -99,23 +98,20 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, voice_ind
     output_path = os.path.join(output_folder, output_file)
     combined_audio.export(output_path, format="wav")
 
+    return output_path
 
 # if len(sys.argv) > 1:
 #     try:
 #         mini_rate = int(sys.argv[1])
-#         voice_index = int(sys.argv[2])
 #         print(f"Received mini_rate: {mini_rate} and voice_index: {voice_index}")
 #     except ValueError:
 #         print("Both mini_rate and voice_index must be integers.")
 # else:
 #     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
-def genvoices(final_subs, mini_rate, voice_index, session_id):
+def genvoices(final_subs, mini_rate, session_id):
     newsubs_parsed = parse_srt_file(final_subs)
-    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, voice_index, session_id)
+    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, session_id)
     print('➡️ Next command to run:')
     print('svc infer result/HindiAudio1.wav -m G_70.pth -c config.json')
     return 'success'
-
-# if __name__ == '__main__':
-#     genvoices('./subs.srt',120, 2, 'd232' )

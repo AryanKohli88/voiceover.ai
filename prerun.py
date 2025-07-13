@@ -62,16 +62,15 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main_func(min_rate_ip, voice_index_ip, session_id, deep_key, google_key):
-    if not is_valid_integer(min_rate_ip) or not is_valid_integer(voice_index_ip):
-        return 'invalid values for <min_rate> and/or <voice_index>'
+def main_func(min_rate_ip, session_id, deep_key, google_key):
+    if not is_valid_integer(min_rate_ip):
+        return 'invalid values for <min_rate>'
     
     min_rate = int(min_rate_ip)
-    voice_index = int(voice_index_ip)
 
     video_dir = os.path.join("video", session_id)
 
-    print(f"Using values {min_rate} and {voice_index} for {session_id}")
+    print(f"Using value {min_rate} for {session_id}")
 
     target_audio_path = os.path.join(video_dir, f"{session_id}.wav")
     print("Using Demucs")
@@ -98,16 +97,10 @@ def main_func(min_rate_ip, voice_index_ip, session_id, deep_key, google_key):
         return op
     print(f'completed generate subs at - {t_subs_path}')
   
-    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, voice_index, session_id)
+    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, session_id)
     # if os.path.exists(t_subs_path):
     #     try:
     #         shutil.rmtree(t_subs_path)
     #         print(f"Deleted existing directory: {t_subs_path}")
     #     except Exception as e:
     #         print(f"Could not delete existing directory: {e}")
-
-
-if __name__ == "__main__":
-    main_func()
-
-

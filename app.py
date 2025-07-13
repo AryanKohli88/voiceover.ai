@@ -11,7 +11,7 @@ session_id = str(uuid.uuid4())[:8]
 deep_key = st.text_input("Enter Deepgram API Key", type="password")
 google_key = st.text_input("Enter Google API Key", type="password")
 min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
-voice_index_ip = 2 #st.text_input("Enter voice index (Recommended value - 2)", type="default")
+# voice_index_ip = st.text_input("Enter voice index (Recommended value - 2)", type="default")
 
 # 2. File Upload
 uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "m4a", "mp4"])
@@ -20,7 +20,7 @@ print("Uploaded file")
 print("Got keys")
 
 @st.fragment    
-def process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_ip):
+def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     """
     Handles audio processing workflow:
     - Checks for required inputs
@@ -29,7 +29,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_
     - Runs prerun.py
     - Displays and allows download of results and stems
     """
-    if not (deep_key and google_key and uploaded_file and min_rate_ip and voice_index_ip):
+    if not (deep_key and google_key and uploaded_file and min_rate_ip):
         st.warning("Please provide all values and upload a file.")
         return
 
@@ -53,7 +53,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_
     # Run prerun.py
     st.info("Processing... Please wait.")
 
-    result = main_func(min_rate_ip, voice_index_ip, session_id, deep_key, google_key)
+    result = main_func(min_rate_ip, session_id, deep_key, google_key)
     st.info(result)
         
     # Check if output exists
@@ -87,4 +87,4 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_
 
 
 if st.button("Process Audio"):
-    process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_ip)
+    process_audio(deep_key, google_key, uploaded_file, min_rate_ip)
