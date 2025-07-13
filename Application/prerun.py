@@ -99,12 +99,12 @@ def main_func(min_rate_ip, voice_index_ip, session_id, deep_key, google_key):
     print(f'completed generate subs at - {t_subs_path}')
   
     genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, voice_index, session_id)
-    if os.path.exists(t_subs_path):
-        try:
-            shutil.rmtree(t_subs_path)
-            print(f"Deleted existing directory: {t_subs_path}")
-        except Exception as e:
-            print(f"Could not delete existing directory: {e}")
+    # if os.path.exists(t_subs_path):
+    #     try:
+    #         shutil.rmtree(t_subs_path)
+    #         print(f"Deleted existing directory: {t_subs_path}")
+    #     except Exception as e:
+    #         print(f"Could not delete existing directory: {e}")
 
 
 if __name__ == "__main__":

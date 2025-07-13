@@ -120,7 +120,7 @@ def transcribe_file(outputsrtfile, session_id, deep_key, google_key):
     )
 
     chat = client.chats.create(model="gemini-2.0-flash")
-    initial_prompt = "You are a professional subtitle translator. Translate each English subtitle line I give you into **natural, conversational Hindi** suitable for dubbing. Keep it short and localized, like it would appear in a Bollywood movie. Avoid overly formal language unless the tone demands it. Reply with **only the translation**, no extra explanation. Choose the best translation and return only that, don't give me options. Write number in text form, for example 2020 as 'Two thousand twenty' in hindi."
+    initial_prompt = "You are a professional subtitle translator. Translate each English subtitle line into **natural, conversational modern Hindi** suitable for dubbing. Keep it short and localized, like it would appear in a Bollywood movie. Avoid overly formal language unless the tone demands it. Reply with **only the translation**, no extra explanation. Choose the best translation and return only that, don't give me options. Write number in text form, for example 2020 as 'Two thousand twenty' in hindi. If the context requires the word to stay in english, write the english word in hindi"
     response = chat.send_message(initial_prompt)
     print(response.text)
 

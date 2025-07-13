@@ -2,17 +2,16 @@ import streamlit as st
 import subprocess
 import os
 import uuid
-session_id = str(uuid.uuid4())[:8]
-
 from prerun import main_func
 
 st.title("Audio Processing App")
+session_id = str(uuid.uuid4())[:8]
 
 # 1. Secret Keys Input
 deep_key = st.text_input("Enter Deepgram API Key", type="password")
 google_key = st.text_input("Enter Google API Key", type="password")
 min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
-voice_index_ip = st.text_input("Enter voice index (Recommended value - 2)", type="default")
+voice_index_ip = 2 #st.text_input("Enter voice index (Recommended value - 2)", type="default")
 
 # 2. File Upload
 uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "m4a", "mp4"])
@@ -81,6 +80,8 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip, voice_index_
                 with open(stem_path, "rb") as f:
                     file_data = f.read()
                 st.audio(file_data, format="audio/wav")
+            else:
+                print("stem doesn't exist")
     else:
         st.error(f"Processing failed. File not found at '{result_path}'. \nIn case of any issue please save this sessions id - {session_id}. This helps.")
 
