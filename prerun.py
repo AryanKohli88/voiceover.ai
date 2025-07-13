@@ -72,9 +72,22 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar):
     print("Using Demucs")
     progress_bar.progress(10)
 
-    check_and_install_demucs()
-
-    run_command(f'demucs "{target_audio_path}"')
+    # check_and_install_demucs()
+    # run_command(f'demucs "{target_audio_path}"')
+    
+    try:
+        result = subprocess.run(
+            ["demucs", target_audio_path],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        print("Demucs output:", result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("Demucs failed:", e.stderr)
+        return "Demucs failed. Details:\n{e.stderr}"
+        
     print("Demucsing completed")
     progress_bar.progress(40)
 

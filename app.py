@@ -3,9 +3,11 @@ import subprocess
 import os
 import uuid
 from prerun import main_func
+import os
 
 st.title("Translate to hindi")
 session_id = str(uuid.uuid4())[:8]
+os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
 
 # 1. Secret Keys Input
 deep_key = st.text_input("Enter Deepgram API Key", type="password")
