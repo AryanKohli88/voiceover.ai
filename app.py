@@ -4,7 +4,7 @@ import os
 import uuid
 from prerun import main_func
 
-st.title("Audio Processing App")
+st.title("Translate to hindi")
 session_id = str(uuid.uuid4())[:8]
 
 # 1. Secret Keys Input
@@ -15,9 +15,7 @@ min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 1
 
 # 2. File Upload
 uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "m4a", "mp4"])
-print("Uploaded file")
 
-print("Got keys")
 
 @st.fragment    
 def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
