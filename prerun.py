@@ -1,15 +1,11 @@
 import os
 import subprocess
 import sys
-import shutil
 import torch
-import pyttsx3
 import shutil
 from generateSubs import transcribe_file
 from genVoices import genvoices
 
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
 
 # what if already existing audio file is not audio.wav?
 # option to add speed of voices
@@ -80,13 +76,13 @@ def main_func(min_rate_ip, session_id, deep_key, google_key):
     run_command(f'demucs "{target_audio_path}"')
     print("Demucsing completed")
 
-    # TO DELETE DEMUCS AUDIOS
-    # if os.path.exists(video_dir):
-    #     try:
-    #         shutil.rmtree(video_dir)
-    #         print(f"Deleted existing directory: {video_dir}")
-    #     except Exception as e:
-    #         print(f"Could not delete existing directory: {e}")
+    # TO DELETE original audio file
+    if os.path.exists(video_dir):
+        try:
+            shutil.rmtree(video_dir)
+            print(f"Deleted existing directory: {video_dir}")
+        except Exception as e:
+            print(f"Could not delete existing directory: {e}")
 
     # Step 4: Run generateSubs.py
     print("calling generate subs")
