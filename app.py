@@ -16,7 +16,7 @@ min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 1
 # voice_index_ip = st.text_input("Enter voice index (Recommended value - 2)", type="default")
 
 # 2. File Upload
-uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "m4a", "mp4"])
+uploaded_file = st.file_uploader("Upload an audio file", type=["wav"])
 
 
 @st.fragment    
