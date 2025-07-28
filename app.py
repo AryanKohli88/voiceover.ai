@@ -4,6 +4,8 @@ import os
 import uuid
 from prerun import main_func
 import os
+from test import test_generate_voice_overs
+from genVoices import parse_srt_file
 
 st.title("Translate to hindi")
 session_id = str(uuid.uuid4())[:8]
@@ -19,7 +21,7 @@ min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 1
 uploaded_file = st.file_uploader("Upload an audio file", type=["wav"])
 
 
-@st.fragment    
+# @st.fragment    
 def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     """
     Handles audio processing workflow:
@@ -88,4 +90,8 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
 
 
 if st.button("Process Audio"):
-    process_audio(deep_key, google_key, uploaded_file, min_rate_ip)
+    # process_audio(deep_key, google_key, uploaded_file, min_rate_ip)
+    newsubs_parsed = parse_srt_file('./test_subs.srt')
+    test_generate_voice_overs(newsubs_parsed, "./HindiAudio.wav", 180, 111)
+    st.audio('./result/111/HindiAudio.wav', format="audio/wav")
+    print("done")
