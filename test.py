@@ -30,7 +30,7 @@ def test_generate_voice_overs(translated_subtitles, output_file, mini_rate, sess
         playback_speed = rate / mini_rate
 
         # Step 1: Generate TTS audio as MP3
-        tts = gTTS(text=text, lang='en')  # or 'hi' for Hindi etc.
+        tts = gTTS(text=text, lang='hi')  # or 'hi' for Hindi etc.
         temp_wav_path = os.path.join(output_folder, f'temp_{idx}.wav')
         temp_sped_path = os.path.join(output_folder, f'temp_{idx}_sped.wav')
         tts.save(temp_wav_path)
