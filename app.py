@@ -7,7 +7,7 @@ import os
 # from test import test_generate_voice_overs
 # from genVoices import parse_srt_file
 
-st.title("Translate to hindi")
+st.title("Translate to your script")
 session_id = str(uuid.uuid4())[:8]
 os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
 
