@@ -96,12 +96,6 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
             print(target_audio_path)
             print("to ")
             print(vocals_file)
-            # result = subprocess.run(
-            #     ["mv", target_audio_path, vocals_file],
-            #     check=True,
-            #     capture_output=True,
-            #     text=True
-            # )
             shutil.move(target_audio_path, vocals_file)
             print(f"File moved and renamed to: {vocals_file}")
         except subprocess.CalledProcessError as e:
@@ -122,7 +116,7 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
     # Step 4: Run generateSubs.py
     print("calling generate subs")
 
-    op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key, progress_bar)
+    op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key, progress_bar, input_lang)
     progress_bar.progress(80)
     
     if(op.strip().lower() != 'success'):

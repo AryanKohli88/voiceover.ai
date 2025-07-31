@@ -88,7 +88,7 @@ def seconds_to_srt_time(seconds):
     ms = int(round((seconds - int(seconds)) * 1000))
     return f"{hours:02}:{minutes:02}:{secs:02},{ms:03}"
 
-def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_bar):
+def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_bar, input_lang):
     AUDIO_FILE_PATH = f"./separated/htdemucs/{session_id}/vocals.wav"
     with open(AUDIO_FILE_PATH, 'rb') as audio:
         response = requests.post(
@@ -121,7 +121,7 @@ def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_ba
     )
 
     chat = client.chats.create(model="gemini-2.0-flash")
-    initial_prompt = "You are a professional subtitle translator. Translate each English subtitle line into **natural, conversational modern Hindi** suitable for dubbing. Keep it short and localized, like it would appear in a Bollywood movie. Avoid overly formal language unless the tone demands it. Reply with **only the translation**, no extra explanation. Choose the best translation and return only that, don't give me options. Write number in text form, for example 2020 as 'Two thousand twenty' in hindi. If the context requires the word to stay in english, write the english word in hindi"
+    initial_prompt = "You are a professional subtitle translator. Translate each English subtitle line into **natural, conversational modern " + input_lang + "** suitable for dubbing. Keep it short and localized, like it would appear in a " + input_lang + " movie. Avoid overly formal language unless the tone demands it. Reply with **only the translation**, no extra explanation. Choose the best translation and return only that, don't give me options. Write number in text form, for example 2020 as 'Two thousand twenty' in " + input_lang + ". If the context requires the word to stay in english, write the english word in " + input_lang
     response = chat.send_message(initial_prompt)
     print(response.text)
 
