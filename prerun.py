@@ -6,7 +6,6 @@ import shutil
 from generateSubs import transcribe_file
 from genVoices import genvoices
 
-
 # what if already existing audio file is not audio.wav?
 # option to add speed of voices
 # select index of voice from installed voices
@@ -58,35 +57,56 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar):
+def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed):
     if not is_valid_integer(min_rate_ip):
         return 'invalid values for <min_rate>'
     
     min_rate = int(min_rate_ip)
-
     video_dir = os.path.join("video", session_id)
 
     print(f"Using value {min_rate} for {session_id}")
 
     target_audio_path = os.path.join(video_dir, f"{session_id}.wav")
+    t_subs_path = f"./separated/htdemucs/{session_id}" # also path of vocals file.
+
     print("Using Demucs")
     progress_bar.progress(10)
 
-    # check_and_install_demucs()
-    # run_command(f'demucs "{target_audio_path}"')
-    
-    try:
-        result = subprocess.run(
-            ["demucs", target_audio_path],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        print("Demucs output:", result.stdout)
-    except subprocess.CalledProcessError as e:
-        print("Demucs failed:", e.stderr)
-        return "Demucs failed. Details:\n{e.stderr}"
+    if(no_demucs_needed == False):
+        try:
+            result = subprocess.run(
+                ["demucs", target_audio_path],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            print("Demucs output:", result.stdout)
+        except subprocess.CalledProcessError as e:
+            print("Demucs failed:", e.stderr)
+            return "Demucs failed. Details:\n{e.stderr}"
+    else:
+        # Move and rename using subprocess.run
+        try:
+            os.makedirs("separated", exist_ok=True)
+            os.makedirs("htdemucs", exist_ok=True)
+            os.makedirs(f"{session_id}", exist_ok=True)
+            vocals_file = f"{t_subs_path}/vocals.wav"
+            print("from ")
+            print(target_audio_path)
+            print("to ")
+            print(vocals_file)
+            # result = subprocess.run(
+            #     ["mv", target_audio_path, vocals_file],
+            #     check=True,
+            #     capture_output=True,
+            #     text=True
+            # )
+            shutil.move(target_audio_path, vocals_file)
+            print(f"File moved and renamed to: {vocals_file}")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to move and rename file: {e.stderr}")
+
         
     print("Demucsing completed")
     progress_bar.progress(40)
@@ -101,8 +121,7 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar):
 
     # Step 4: Run generateSubs.py
     print("calling generate subs")
-    
-    t_subs_path = f"./separated/htdemucs/{session_id}"
+
     op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key, progress_bar)
     progress_bar.progress(80)
     
@@ -111,7 +130,7 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar):
     print(f'completed generate subs at - {t_subs_path}')
 
     progress_bar.progress(90)
-    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, session_id)
+    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, session_id, input_lang)
     progress_bar.progress(100)
 
     # if os.path.exists(t_subs_path):

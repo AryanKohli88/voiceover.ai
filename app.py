@@ -4,8 +4,8 @@ import os
 import uuid
 from prerun import main_func
 import os
-from test import test_generate_voice_overs
-from genVoices import parse_srt_file
+# from test import test_generate_voice_overs
+# from genVoices import parse_srt_file
 
 st.title("Translate to hindi")
 session_id = str(uuid.uuid4())[:8]
@@ -14,14 +14,29 @@ os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
 # 1. Secret Keys Input
 deep_key = st.text_input("Enter Deepgram API Key", type="password")
 google_key = st.text_input("Enter Google API Key", type="password")
+input_lang = st.radio(
+    "Select output language:",
+    options=[
+        ("hi", "Hindi"),
+        ("en", "English"),
+        ("fr", "French"),
+        ("zh-CN", "Mandarin (China Mainland)"),
+        ("zh-TW", "Mandarin (Taiwan)"),
+        ("pt", "Portuguese"),
+        ("es", "Spanish")
+    ],
+    format_func=lambda x: x[1]
+)[0]  # Extract only the language code
+no_demucs_needed = False
+no_demucs_needed = st.checkbox("I have clean audio with no background noise or music")
+
 min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
-# voice_index_ip = st.text_input("Enter voice index (Recommended value - 2)", type="default")
 
 # 2. File Upload
 uploaded_file = st.file_uploader("Upload an audio file", type=["wav"])
 
 
-# @st.fragment    
+@st.fragment    
 def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     """
     Handles audio processing workflow:
@@ -56,7 +71,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     st.info("Processing... Please wait.")
     progress_bar = st.progress(0)
 
-    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar)
+    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed)
     st.info(result)
         
     # Check if output exists
@@ -71,12 +86,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
 
         # Download options for stems
         stems = ["bass.wav", "drums.wav", "other.wav", "vocals.wav"]
-        # renamed_labels = {
-        #     "vocals.wav": "original_speech.wav",
-        #     "bass.wav": "bass.wav",
-        #     "drums.wav": "drums.wav",
-        #     "other.wav": "other.wav"
-        # }
+
         for stem in stems:
             stem_path = os.path.join(stems_dir, stem)
             if os.path.exists(stem_path):
@@ -90,8 +100,8 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
 
 
 if st.button("Process Audio"):
-    # process_audio(deep_key, google_key, uploaded_file, min_rate_ip)
-    newsubs_parsed = parse_srt_file('./test_subs.srt')
-    test_generate_voice_overs(newsubs_parsed, "./HindiAudio.wav", 180, 111)
-    st.audio('./result/111/HindiAudio.wav', format="audio/wav")
-    print("done")
+    process_audio(deep_key, google_key, uploaded_file, min_rate_ip)
+    # newsubs_parsed = parse_srt_file('./test_subs.srt')
+    # test_generate_voice_overs(newsubs_parsed, "./HindiAudio.wav", 180, 111)
+    # st.audio('./result/111/HindiAudio.wav', format="audio/wav")
+    # print("done")

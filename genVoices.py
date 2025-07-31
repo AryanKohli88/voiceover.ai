@@ -46,7 +46,7 @@ def parse_srt_file(file_path):
 
     return parsed_subtitles
 
-def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_id):
+def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_id, input_lang):
     # Create the 'result' folder if it doesn't exist
     output_folder = f"result/{session_id}"
     os.makedirs(output_folder, exist_ok=True)
@@ -66,7 +66,7 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
         playback_speed = rate / mini_rate
 
         # Step 1: Generate TTS audio as MP3
-        tts = gTTS(text=text, lang='en')  # or 'hi' for Hindi etc.
+        tts = gTTS(text=text, lang=input_lang)  # or 'hi' for Hindi etc.
         temp_wav_path = os.path.join(output_folder, f'temp_{idx}.wav')
         temp_sped_path = os.path.join(output_folder, f'temp_{idx}_sped.wav')
         tts.save(temp_wav_path)
@@ -108,9 +108,9 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 # else:
 #     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
-def genvoices(final_subs, mini_rate, session_id):
+def genvoices(final_subs, mini_rate, session_id, input_lang):
     newsubs_parsed = parse_srt_file(final_subs)
-    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, session_id)
+    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, session_id, input_lang)
     print('➡️ Next command to run:')
     print('svc infer result/HindiAudio1.wav -m G_70.pth -c config.json')
     return 'success'
