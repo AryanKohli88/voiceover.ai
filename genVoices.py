@@ -6,7 +6,6 @@ import sys
 from gtts import gTTS
 import subprocess
 
-
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
@@ -55,30 +54,23 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 
     for idx, (start, end, speaker, text) in enumerate(translated_subtitles):
         word_count = len(text.strip().split())
-        duration_sec = end - start
-        if duration_sec <= 0 or word_count == 0:
+        wanted_duration_sec = end - start
+        if wanted_duration_sec <= 0 or word_count == 0:
             continue
-
-        rate = int((word_count * 60) / duration_sec)
-        rate = max(mini_rate, min(rate, 300))  # constrain between mini_rate and 300
-
-        # Estimate playback_speed factor (mini_rate is baseline)
-        playback_speed = rate / mini_rate
 
         # Step 1: Generate TTS audio as MP3
         tts = gTTS(text=text, lang=input_lang)  # or 'hi' for Hindi etc.
-        temp_wav_path = os.path.join(output_folder, f'temp_{idx}.wav')
+        temp_mp3_path = os.path.join(output_folder, f'temp_{idx}.mp3')
         temp_sped_path = os.path.join(output_folder, f'temp_{idx}_sped.wav')
-        tts.save(temp_wav_path)
+        tts.save(temp_mp3_path)
+        temp_audio = AudioSegment.from_file(temp_mp3_path)
+        actual_duration_ms = len(temp_audio)        # duration in milliseconds
+        wanted_duration_sec = wanted_duration_sec*1000
+        playback_speed = actual_duration_ms/wanted_duration_sec
 
         # Step 2: Convert to AudioSegment and adjust speed
-        if playback_speed < 0.5:
-            playback_speed = 0.5
-        elif playback_speed > 2.0:
-            playback_speed = 2.0
-
         subprocess.run([
-            "ffmpeg", "-y", "-i", temp_wav_path,
+            "ffmpeg", "-y", "-i", temp_mp3_path,
             "-filter:a", f"atempo={playback_speed}",
             temp_sped_path
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -92,7 +84,7 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
         
         combined_audio += voice_over
         os.remove(temp_sped_path)
-        os.remove(temp_wav_path)
+        os.remove(temp_mp3_path)
 
     output_path = os.path.join(output_folder, output_file)
     combined_audio.export(output_path, format="wav")
