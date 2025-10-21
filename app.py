@@ -2,14 +2,41 @@ import streamlit as st
 import subprocess
 import os
 import uuid
+import requests
+import time
 from prerun import main_func
 import os
+import streamlit as st
+import requests
+
 # from test import test_generate_voice_overs
 # from genVoices import parse_srt_file
 
 st.title("Translate to your script")
 session_id = str(uuid.uuid4())[:8]
 os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
+
+# --- 0. Test Klefki Key ---
+st.header("🔑 Test Your Klefki Key")
+
+klefki_key = st.text_input("Enter your Klefki API Key", type="password")
+test_button = st.button("Test My Key")
+
+if test_button and klefki_key:
+    with st.spinner("Verifying your key..."):
+        try:
+            response = requests.get(
+                "https://klefki-backend-fra.onrender.com/api/validate/ukk",  # replace with your actual endpoint
+                json={"key": klefki_key},
+                timeout=10
+            )
+            if response.status_code == 200:
+                st.success("✅ Key is valid!")
+            else:
+                st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            st.error(f"❌ Error connecting to server: {e}")
+
 
 # 1. Secret Keys Input
 deep_key = st.text_input("Enter Deepgram API Key", type="password")
@@ -71,7 +98,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     st.info("Processing... Please wait.")
     progress_bar = st.progress(0)
 
-    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed)
+    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key)
     st.info(result)
         
     # Check if output exists

@@ -57,7 +57,7 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed):
+def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key):
     if not is_valid_integer(min_rate_ip):
         return 'invalid values for <min_rate>'
     
@@ -124,7 +124,7 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
     print(f'completed generate subs at - {t_subs_path}')
 
     progress_bar.progress(90)
-    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, session_id, input_lang)
+    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, session_id, input_lang, klefki_key)
     progress_bar.progress(100)
 
     # if os.path.exists(t_subs_path):

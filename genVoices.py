@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import sys
 from gtts import gTTS
 import subprocess
+import requests
 
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -100,9 +101,25 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 # else:
 #     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
-def genvoices(final_subs, mini_rate, session_id, input_lang):
+def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key):
     newsubs_parsed = parse_srt_file(final_subs)
     generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, session_id, input_lang)
+
+    # Call POST API
+    api_url = "https://klefki-backend-fra.onrender.com/klefki-api"
+    payload = {
+    "expense_UKK": klefki_key,
+    "expense_value": 10
+    }
+
+    try:
+        response = requests.post(api_url, json=payload)
+        response.raise_for_status()  # raises exception for HTTP errors
+        print("✅ POST API response:", response.json())
+    except requests.exceptions.RequestException as e:
+        print("❌ Failed to call API:", e)
+
+
     print('➡️ Next command to run:')
     print('svc infer result/HindiAudio1.wav -m G_70.pth -c config.json')
     return 'success'
