@@ -183,3 +183,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+/Trailer
+/test2.py
+./diarization_plot.png
+./nova-3-deepgram.json
+./nova-2-deepgram.json

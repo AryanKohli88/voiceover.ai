@@ -102,15 +102,17 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 #     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
 def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key):
-    newsubs_parsed = parse_srt_file(final_subs)
-    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, session_id, input_lang)
-
-    # Call POST API
+    
+    # Call Klefki POST API
     api_url = "https://klefki-backend-fra.onrender.com/klefki-api"
     payload = {
     "expense_UKK": klefki_key,
-    "expense_value": 10
+    "expense_value": 1,
+    "tool_ID_byDev": "tool_id_988ec485-17ef-460b-8977-b07be88c34f6"
     }
+
+    newsubs_parsed = parse_srt_file(final_subs)
+    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, session_id, input_lang)
 
     try:
         response = requests.post(api_url, json=payload)
