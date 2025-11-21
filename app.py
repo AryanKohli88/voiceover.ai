@@ -153,6 +153,24 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
 
 
 if st.button("Process Audio"):
+
+    with st.spinner("Verifying your key..."):
+        try:
+            response = requests.get(
+                "https://klefki-backend-fra.onrender.com/api/validate/ukk",  # replace with your actual endpoint
+                json={"key": klefki_key},
+                timeout=10
+            )
+            if response.status_code == 200:
+                st.success("✅ Key is valid!")
+            else:
+                st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
+                st.stop()
+        except requests.exceptions.RequestException as e:
+            st.error(f"❌ Error connecting to server: {e}")
+            st.stop()
+
+
     process_audio(deep_key, google_key, uploaded_file, min_rate_ip)
     # newsubs_parsed = parse_srt_file('./test_subs.srt')
     # test_generate_voice_overs(newsubs_parsed, "./HindiAudio.wav", 180, 111)
