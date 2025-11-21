@@ -57,7 +57,7 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key):
+def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang):
     if not is_valid_integer(min_rate_ip):
         return 'invalid values for <min_rate>'
     
@@ -116,7 +116,7 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
     # Step 4: Run generateSubs.py
     print("calling generate subs")
 
-    op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key, progress_bar, input_lang)
+    op = transcribe_file(f"{t_subs_path}/{session_id}_translated.srt", session_id, deep_key, google_key, progress_bar, input_lang, speaker_lang)
     progress_bar.progress(80)
     
     if(op.strip().lower() != 'success'):

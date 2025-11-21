@@ -107,8 +107,8 @@ def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key):
     api_url = "https://klefki-backend-fra.onrender.com/klefki-api"
     payload = {
     "expense_UKK": klefki_key,
-    "expense_value": 1,
-    "tool_ID_byDev": "tool_id_988ec485-17ef-460b-8977-b07be88c34f6"
+    "expense_value": 4,
+    "tool_ID_byDev": "tool_id_28b5a351-6990-4a15-bdb5-e00cbd605513"
     }
 
     newsubs_parsed = parse_srt_file(final_subs)

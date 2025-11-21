@@ -45,6 +45,17 @@ input_lang = st.radio(
     "Select output language:",
     options=[
         ("hi", "Hindi"),
+        ("bn", "Bengali"),
+        ("ta", "Tamil"),
+        ("te", "Telugu"),
+        ("ml", "Malayalam"),
+        ("kn", "Kannada"),
+        ("gu", "Gujarati"),
+        ("mr", "Marathi"),
+        ("pa", "Punjabi"),
+        ("ur", "Urdu"),
+        ("ne", "Nepali"),
+        ("si", "Sinhala"),
         ("en", "English"),
         ("fr", "French"),
         ("zh-CN", "Mandarin (China Mainland)"),
@@ -54,6 +65,17 @@ input_lang = st.radio(
     ],
     format_func=lambda x: x[1]
 )[0]  # Extract only the language code
+
+speaker_lang = st.radio(
+    "Select input language:",
+    options=[
+        ("hi", "Hindi"),
+        ("en", "English")
+    ],
+    format_func=lambda x: x[1]
+)[0]  # Extract only the language code
+
+
 no_demucs_needed = False
 no_demucs_needed = st.checkbox("I have clean audio with no background noise or music")
 
@@ -98,7 +120,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     st.info("Processing... Please wait.")
     progress_bar = st.progress(0)
 
-    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key)
+    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang)
     st.info(result)
         
     # Check if output exists
