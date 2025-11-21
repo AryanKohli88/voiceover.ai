@@ -7,7 +7,7 @@ import time
 from prerun import main_func
 import os
 import streamlit as st
-import requests
+import wave
 
 # from test import test_generate_voice_overs
 # from genVoices import parse_srt_file
@@ -116,11 +116,15 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     with open(input_path, "wb") as f:
         f.write(uploaded_file.read())
 
+    duration = 0
+    with wave.open(input_path, "rb") as audio:
+        duration = audio.getnframes() / audio.getframerate()
+
     # Run prerun.py
     st.info("Processing... Please wait.")
     progress_bar = st.progress(0)
 
-    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang)
+    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration)
     st.info(result)
         
     # Check if output exists

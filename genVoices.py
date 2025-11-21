@@ -6,6 +6,7 @@ import sys
 from gtts import gTTS
 import subprocess
 import requests
+import math
 
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -101,13 +102,13 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 # else:
 #     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
-def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key):
+def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key, duration):
     
     # Call Klefki POST API
     api_url = "https://klefki-backend-fra.onrender.com/klefki-api"
     payload = {
     "expense_UKK": klefki_key,
-    "expense_value": 4,
+    "expense_value": math.ceil(duration/60),
     "tool_ID_byDev": "tool_id_28b5a351-6990-4a15-bdb5-e00cbd605513"
     }
 
