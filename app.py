@@ -12,12 +12,12 @@ import wave
 # from test import test_generate_voice_overs
 # from genVoices import parse_srt_file
 
-st.title("Translate to your script")
+st.title("Dub your audio with Klefki's AI Powered Audio Translator 🎙️🌐")
 session_id = str(uuid.uuid4())[:8]
 os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
 
 # --- 0. Test Klefki Key ---
-st.header("🔑 Test Your Klefki Key")
+st.markdown("📘 Watch the <a href='https://aryankohli88.github.io/tfypdubs.html' target='_blank'><strong>Tutorial</strong></a> on how to use this tool.", unsafe_allow_html=True)
 
 klefki_key = st.text_input("Enter your Klefki API Key", type="password")
 test_button = st.button("Test My Key")
@@ -77,7 +77,7 @@ speaker_lang = st.radio(
 
 
 no_demucs_needed = False
-no_demucs_needed = st.checkbox("I do not need backgroud music as a seperate file / I have clean audio with no background noise (Reduces time taken to half!)")
+no_demucs_needed = st.checkbox("I do not need backgroud music as a seperate file / I have clean audio with no background noise. (Reduces time taken to half!)")
 
 min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
 
