@@ -8,3 +8,4 @@ gTTS
 torch
 demucs
 ffmpeg
+torchcodec
