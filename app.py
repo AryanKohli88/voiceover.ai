@@ -77,7 +77,7 @@ speaker_lang = st.radio(
 
 
 no_demucs_needed = False
-no_demucs_needed = st.checkbox("I have clean audio with no background noise or music")
+no_demucs_needed = st.checkbox("I do not need backgroud music as a seperate file / I have clean audio with no background noise (Reduces time taken to half!)")
 
 min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
 
