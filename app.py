@@ -39,7 +39,7 @@ if test_button and klefki_key:
 
 
 # 1. Secret Keys Input
-deep_key = st.text_input("Enter Deepgram API Key", type="password")
+deep_key = st.secrets["DEEPGRAM_KEY"] # st.text_input("Enter Deepgram API Key", type="password")
 google_key = st.text_input("Enter Google API Key", type="password")
 input_lang = st.radio(
     "Select output language:",
