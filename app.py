@@ -64,7 +64,7 @@ input_lang = st.radio(
         ("es", "Spanish")
     ],
     format_func=lambda x: x[1]
-)[0]  # Extract only the language code
+)[1]  # Extract only the language name
 
 speaker_lang = st.radio(
     "Select input language:",
@@ -123,7 +123,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     # Run prerun.py
     st.info("Processing... Please wait.")
     progress_bar = st.progress(0)
-
+    
     result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration)
     st.info(result)
         

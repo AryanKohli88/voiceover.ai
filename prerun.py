@@ -103,6 +103,7 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
 
         
     print("Demucsing completed")
+    print(input_lang)
     progress_bar.progress(40)
 
     # TO DELETE original audio file

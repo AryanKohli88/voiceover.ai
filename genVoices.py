@@ -8,6 +8,34 @@ import subprocess
 import requests
 import math
 
+def get_lang_code(lang_name: str) -> str:
+    lang_map = {
+        "hindi": "hi",
+        "bengali": "bn",
+        "tamil": "ta",
+        "telugu": "te",
+        "malayalam": "ml",
+        "kannada": "kn",
+        "gujarati": "gu",
+        "marathi": "mr",
+        "punjabi": "pa",
+        "urdu": "ur",
+        "nepali": "ne",
+        "sinhala": "si",
+        "english": "en",
+        "french": "fr",
+        "mandarin (china mainland)": "zh-CN",
+        "mandarin (taiwan)": "zh-TW",
+        "portuguese": "pt",
+        "spanish": "es"
+    }
+
+    # normalize input (lowercase, strip spaces)
+    lang_name = lang_name.strip().lower()
+
+    return lang_map.get(lang_name, None)   # returns None if not found
+
+
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
@@ -51,42 +79,70 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
     # Create the 'result' folder if it doesn't exist
     output_folder = f"result/{session_id}"
     os.makedirs(output_folder, exist_ok=True)
+    lang_code = get_lang_code(input_lang)
+    if lang_code is None:
+        raise ValueError(f"Unsupported language: {input_lang}")
 
     combined_audio = AudioSegment.silent(duration=0)
 
     for idx, (start, end, speaker, text) in enumerate(translated_subtitles):
-        word_count = len(text.strip().split())
+        text = text.strip()
+        word_count = len(text.split())
         wanted_duration_sec = end - start
         if wanted_duration_sec <= 0 or word_count == 0:
             continue
 
-        # Step 1: Generate TTS audio as MP3
-        tts = gTTS(text=text, lang=input_lang)  # or 'hi' for Hindi etc.
         temp_mp3_path = os.path.join(output_folder, f'temp_{idx}.mp3')
         temp_sped_path = os.path.join(output_folder, f'temp_{idx}_sped.wav')
-        tts.save(temp_mp3_path)
-        temp_audio = AudioSegment.from_file(temp_mp3_path)
-        actual_duration_ms = len(temp_audio)        # duration in milliseconds
-        wanted_duration_sec = wanted_duration_sec*1000
-        playback_speed = actual_duration_ms/wanted_duration_sec
 
-        # Step 2: Convert to AudioSegment and adjust speed
-        subprocess.run([
-            "ffmpeg", "-y", "-i", temp_mp3_path,
-            "-filter:a", f"atempo={playback_speed}",
-            temp_sped_path
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            # Step 1: Generate TTS audio as MP3
+            tts = gTTS(text=text, lang=lang_code)
+            tts.save(temp_mp3_path)
 
-        voice_over = AudioSegment.from_file(temp_sped_path)
+            if not os.path.exists(temp_mp3_path) or os.path.getsize(temp_mp3_path) < 500:
+                print(f"Skipping index {idx}: MP3 not created or too small")
+                continue
 
-        # Step 3: Insert silence padding if needed
-        silence_duration = start * 1000 - len(combined_audio)
-        if silence_duration > 0:
-            combined_audio += AudioSegment.silent(duration=silence_duration)
-        
-        combined_audio += voice_over
-        os.remove(temp_sped_path)
-        os.remove(temp_mp3_path)
+            temp_audio = AudioSegment.from_file(temp_mp3_path)
+            actual_duration_ms = len(temp_audio)        # duration in milliseconds
+
+            # If audio is too short, skip it
+            if actual_duration_ms < 200:
+                print(f"Skipping index {idx}: Audio too short")
+                continue
+
+            wanted_duration_sec = wanted_duration_sec*1000
+            # Avoid divide by zero
+            if wanted_duration_sec <= 0:
+                continue
+
+            playback_speed = actual_duration_ms/wanted_duration_sec
+
+            # Step 2: Convert to AudioSegment and adjust speed
+            subprocess.run([
+                "ffmpeg", "-y", "-i", temp_mp3_path,
+                "-filter:a", f"atempo={playback_speed}",
+                temp_sped_path
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"Generated audio for index {idx} with playback speed {playback_speed:.2f}")
+            voice_over = AudioSegment.from_file(temp_sped_path, format="wav")
+            # Step 3: Insert silence padding if needed
+            silence_duration = start * 1000 - len(combined_audio)
+            if silence_duration > 0:
+                combined_audio += AudioSegment.silent(duration=silence_duration)
+
+            combined_audio += voice_over
+
+        except Exception as e:
+            print(f"Skipping index {idx} due to error: {e}")
+            continue
+
+        finally:
+            if os.path.exists(temp_sped_path):
+                os.remove(temp_sped_path)
+            if os.path.exists(temp_mp3_path):
+                os.remove(temp_mp3_path)
 
     output_path = os.path.join(output_folder, output_file)
     combined_audio.export(output_path, format="wav")
@@ -103,7 +159,6 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 #     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
 def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key, duration):
-    
     # Call Klefki POST API
     api_url = "https://klefki-backend-fra.onrender.com/klefki-api"
     payload = {

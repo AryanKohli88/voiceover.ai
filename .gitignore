@@ -189,3 +189,4 @@ cython_debug/
 ./diarization_plot.png
 ./nova-3-deepgram.json
 ./nova-2-deepgram.json
+./streamlit/secrets.toml
