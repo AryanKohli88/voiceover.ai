@@ -1,11 +1,8 @@
 streamlit
 requests
 google-generativeai
-google-genai
-pyttsx3
-pydub
-gTTS
-torch
-demucs
-ffmpeg
-torchcodec
+google-genai==0.8.5
+gTTS==2.5.4
+torch==2.1.0+cu121
+demucs==4.0.1
+pydub==0.25.1
