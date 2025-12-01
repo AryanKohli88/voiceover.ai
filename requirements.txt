@@ -3,6 +3,6 @@ requests
 google-generativeai
 google-genai
 gTTS==2.5.4
-torch==2.1.0+cu121
+torch==2.1.0+cpu
 demucs==4.0.1
 pydub==0.25.1
