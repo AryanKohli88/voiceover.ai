@@ -8,6 +8,7 @@ from prerun import main_func
 import os
 import streamlit as st
 import wave
+import tempfile
 
 # from test import test_generate_voice_overs
 # from genVoices import parse_srt_file
@@ -75,9 +76,14 @@ speaker_lang = st.radio(
     format_func=lambda x: x[1]
 )[0]  # Extract only the language code
 
+tmp_dir = tempfile.gettempdir()  # usually /tmp on Linux, correct on Windows too
+LOCK_FILE = os.path.join(tmp_dir, "demucs.lock")
 
 no_demucs_needed = False
-no_demucs_needed = st.checkbox("I do not need backgroud music as a seperate file / I have clean audio with no background noise. (Reduces time taken to half!)")
+no_demucs_needed = st.checkbox(
+    "I do not need backgroud music as a seperate file / I have clean audio with no background noise. (Reduces time taken to half!)",
+    disabled=os.path.exists(LOCK_FILE)
+)
 
 min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
 

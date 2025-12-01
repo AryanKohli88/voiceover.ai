@@ -5,6 +5,8 @@ import torch
 import shutil
 from generateSubs import transcribe_file
 from genVoices import genvoices
+import streamlit as st
+import tempfile
 
 # what if already existing audio file is not audio.wav?
 # option to add speed of voices
@@ -71,8 +73,17 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
 
     print("Using Demucs")
     progress_bar.progress(10)
+    tmp_dir = tempfile.gettempdir()  # usually /tmp on Linux, correct on Windows too
+    LOCK_FILE = os.path.join(tmp_dir, "demucs.lock")
+
+    if not no_demucs_needed and os.path.exists(LOCK_FILE):
+        no_demucs_needed = True
+        st.warning("⚠️ Demucs will be skipped because of high load.")
+        print("Another demucs process is running. Skipping demucs step.")
 
     if(no_demucs_needed == False):
+        # Acquire lock
+        open(LOCK_FILE, "w").close()
         try:
             result = subprocess.run(
                 ["demucs", target_audio_path],
@@ -85,6 +96,9 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
         except subprocess.CalledProcessError as e:
             print("Demucs failed:", e.stderr)
             return "Demucs failed. Details:\n{e.stderr}"
+        finally:
+            # Release lock
+            os.remove(LOCK_FILE)
     else:
         # Move and rename using subprocess.run
         try:
