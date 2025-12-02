@@ -94,7 +94,28 @@ no_demucs_needed = st.checkbox(
     disabled=os.path.exists(LOCK_FILE)
 )
 
-gold_user = st.checkbox("Premium Quality Voice")
+PREMIUM_LANGUAGES = {
+    "English",
+    "Hindi",
+    "Bengali",
+    "Malayalam",
+    "Marathi",
+    "Tamil",
+    "Gujarati",
+    "Telugu",
+    "Kannada",
+}
+premium_allowed = input_lang in PREMIUM_LANGUAGES
+if not premium_allowed:
+    st.session_state["gold_user"] = False
+
+gold_user = st.checkbox(
+    "Premium Quality Voice", # add link to pricing and other details
+    key="gold_user",
+    disabled=not premium_allowed
+)
+if not premium_allowed:
+    st.warning("⚠️ Premium voice is not available for the selected language.")
 # gold_user = st.checkbox("Premium Quality Voide (Comming Soon!)", disabled=True)
 min_rate_ip = 180 # st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
 

@@ -112,7 +112,7 @@ def generate_voice_overs(translated_subtitles, output_file, session_id, input_la
                     endpoint_url=endpoint,
                     model_name=model_name
                 )
-                time.sleep(10) # brief pause to avoid overwhelming the API
+                time.sleep(5) # brief pause to avoid overwhelming the API
             else:
                 tts = gTTS(text=text, lang=lang_code)
                 tts.save(temp_mp3_path)
@@ -177,10 +177,13 @@ def generate_voice_overs(translated_subtitles, output_file, session_id, input_la
 
 def genvoices(final_subs, session_id, input_lang, klefki_key, duration, OK_key, OK_endpoint, gold_user, OK_model_name):
     # Call Klefki POST API
+    cost = math.ceil(duration/60)
+    if gold_user:
+        cost = cost * 5  # premium users pay 5 times the credits
     api_url = "https://klefki-backend-fra.onrender.com/klefki-api"
     payload = {
     "expense_UKK": klefki_key,
-    "expense_value": math.ceil(duration/60),
+    "expense_value": cost,
     "tool_ID_byDev": "tool_id_28b5a351-6990-4a15-bdb5-e00cbd605513"
     }
 
