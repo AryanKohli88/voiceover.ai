@@ -12,6 +12,11 @@ import tempfile
 
 # from test import test_generate_voice_overs
 # from genVoices import parse_srt_file
+st.set_page_config(
+    page_title="Klefki AI Translator",
+    page_icon="🎙️",
+    layout="wide"
+)
 
 st.title("Dub your audio with Klefki's AI Powered Audio Translator 🎙️🌐")
 session_id = str(uuid.uuid4())[:8]
@@ -40,12 +45,16 @@ if test_button and klefki_key:
 
 
 # 1. Secret Keys Input
-deep_key = st.secrets["DEEPGRAM_KEY"] # st.text_input("Enter Deepgram API Key", type="password")
+deep_key = st.secrets["DEEPGRAM_KEY"]
+OK_key = st.secrets["OK_KEY"]
+OK_endpoint = st.secrets["OK_ENDPOINT"]
+OK_model_name = st.secrets["OK_MODEL_NAME"]
+
 google_key = st.text_input("Enter Google API Key", type="password")
 input_lang = st.radio(
     "Select output language:",
     options=[
-        ("hi", "Hindi"),
+        ("hi", "Hindi"), # enable for gold users accordingly
         ("bn", "Bengali"),
         ("ta", "Tamil"),
         ("te", "Telugu"),
@@ -85,14 +94,16 @@ no_demucs_needed = st.checkbox(
     disabled=os.path.exists(LOCK_FILE)
 )
 
-min_rate_ip = st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
+gold_user = st.checkbox("Premium Quality Voice")
+# gold_user = st.checkbox("Premium Quality Voide (Comming Soon!)", disabled=True)
+min_rate_ip = 180 # st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
 
 # 2. File Upload
 uploaded_file = st.file_uploader("Upload an audio file", type=["wav"])
 
 
 @st.fragment    
-def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
+def process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name):
     """
     Handles audio processing workflow:
     - Checks for required inputs
@@ -101,7 +112,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     - Runs prerun.py
     - Displays and allows download of results and stems
     """
-    if not (deep_key and google_key and uploaded_file and min_rate_ip):
+    if not (deep_key and google_key and uploaded_file):
         st.warning("Please provide all values and upload a file.")
         return
 
@@ -130,7 +141,7 @@ def process_audio(deep_key, google_key, uploaded_file, min_rate_ip):
     st.info("Processing... Please wait.")
     progress_bar = st.progress(0)
     
-    result = main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration)
+    result = main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration, OK_key, OK_endpoint, gold_user, OK_model_name)
     st.info(result)
         
     # Check if output exists
@@ -177,7 +188,7 @@ if st.button("Process Audio"):
             st.stop()
 
 
-    process_audio(deep_key, google_key, uploaded_file, min_rate_ip)
+    process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name)
     # newsubs_parsed = parse_srt_file('./test_subs.srt')
     # test_generate_voice_overs(newsubs_parsed, "./HindiAudio.wav", 180, 111)
     # st.audio('./result/111/HindiAudio.wav', format="audio/wav")

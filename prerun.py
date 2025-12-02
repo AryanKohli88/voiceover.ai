@@ -59,14 +59,10 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration):
-    if not is_valid_integer(min_rate_ip):
-        return 'invalid values for <min_rate>'
-    
-    min_rate = int(min_rate_ip)
+def main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration, OK_key, OK_endpoint, gold_user, OK_model_name):
     video_dir = os.path.join("video", session_id)
 
-    print(f"Using value {min_rate} for {session_id}")
+    print(f"Using session ID {session_id}")
 
     target_audio_path = os.path.join(video_dir, f"{session_id}.wav")
     t_subs_path = f"./separated/htdemucs/{session_id}" # also path of vocals file.
@@ -139,7 +135,7 @@ def main_func(min_rate_ip, session_id, deep_key, google_key, progress_bar, input
     print(f'completed generate subs at - {t_subs_path}')
 
     progress_bar.progress(90)
-    genvoices(f"{t_subs_path}/{session_id}_translated.srt", min_rate, session_id, input_lang, klefki_key, duration)
+    genvoices(f"{t_subs_path}/{session_id}_translated.srt", session_id, input_lang, klefki_key, duration, OK_key, OK_endpoint, gold_user, OK_model_name)
     progress_bar.progress(100)
 
     # if os.path.exists(t_subs_path):

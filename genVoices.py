@@ -7,6 +7,8 @@ from gtts import gTTS
 import subprocess
 import requests
 import math
+from synthesize_voice import synthesize_voice
+import time
 
 def get_lang_code(lang_name: str) -> str:
     lang_map = {
@@ -75,7 +77,7 @@ def parse_srt_file(file_path):
 
     return parsed_subtitles
 
-def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_id, input_lang):
+def generate_voice_overs(translated_subtitles, output_file, session_id, input_lang, OK_key, OK_endpoint, gold_user, OK_model_name):
     # Create the 'result' folder if it doesn't exist
     output_folder = f"result/{session_id}"
     os.makedirs(output_folder, exist_ok=True)
@@ -94,11 +96,26 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 
         temp_mp3_path = os.path.join(output_folder, f'temp_{idx}.mp3')
         temp_sped_path = os.path.join(output_folder, f'temp_{idx}_sped.wav')
-
+        api_key=OK_key
+        endpoint=OK_endpoint
+        model_name=OK_model_name
+        
+        
         try:
             # Step 1: Generate TTS audio as MP3
-            tts = gTTS(text=text, lang=lang_code)
-            tts.save(temp_mp3_path)
+            if gold_user:
+                tts = synthesize_voice(
+                    api_key=api_key,
+                    text=text,
+                    output_path=temp_mp3_path,
+                    input_language=lang_code,
+                    endpoint_url=endpoint,
+                    model_name=model_name
+                )
+                time.sleep(10) # brief pause to avoid overwhelming the API
+            else:
+                tts = gTTS(text=text, lang=lang_code)
+                tts.save(temp_mp3_path)
 
             if not os.path.exists(temp_mp3_path) or os.path.getsize(temp_mp3_path) < 500:
                 print(f"Skipping index {idx}: MP3 not created or too small")
@@ -158,7 +175,7 @@ def generate_voice_overs(translated_subtitles, output_file, mini_rate, session_i
 # else:
 #     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
 
-def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key, duration):
+def genvoices(final_subs, session_id, input_lang, klefki_key, duration, OK_key, OK_endpoint, gold_user, OK_model_name):
     # Call Klefki POST API
     api_url = "https://klefki-backend-fra.onrender.com/klefki-api"
     payload = {
@@ -168,7 +185,7 @@ def genvoices(final_subs, mini_rate, session_id, input_lang, klefki_key, duratio
     }
 
     newsubs_parsed = parse_srt_file(final_subs)
-    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", mini_rate, session_id, input_lang)
+    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", session_id, input_lang, OK_key, OK_endpoint, gold_user, OK_model_name)
 
     try:
         response = requests.post(api_url, json=payload)
