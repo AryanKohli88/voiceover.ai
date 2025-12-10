@@ -3,7 +3,7 @@ import requests
 import time
 from google import genai
 import time
-
+import json
 
 def read_srt_file(file_path):
     lines = []
@@ -24,19 +24,30 @@ def read_srt_file(file_path):
     return lines
 
 
-def translate_lines_to_hindi(subtitles, chat, delay=7):
-    translated = ''
+def translate_lines_to_hindi(lines, chat):
     try:
-      response = chat.send_message(subtitles)
-      reply = response.text.strip()
-      translated = reply
+        response = chat.send_message(lines)
+        raw = response.text.strip()
+
+        # Split into individual translations
+        data = [line.strip() for line in raw.split("\n") if line.strip()]
+
+        # Fix length mismatches
+        if len(data) != len(lines):
+            print(f"WARNING: expected {len(lines)} lines but got {len(data)}")
+            if len(data) > len(lines):
+                data = data[:len(lines)]
+            else:
+                data += [""] * (len(lines) - len(data))
+
+        return data
+
     except Exception as e:
-      print(f"Error on line {subtitles}: {e}")
+        print(f"Error: {e}")
+        return [""] * len(lines)
     finally:
       print(f"Translation stopped or completed.")
-    
-    time.sleep(delay) # to stay in free limit of gemini API.
-    return translated
+
 
 def write_translated_srt(original_path, translated_lines, output_path="output_translated.srt"):
     with open(original_path, 'r', encoding='utf-8') as file:
@@ -112,8 +123,6 @@ def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_ba
     result = response.json()
     paragraphs = result['results']['channels'][0]['alternatives'][0]['paragraphs']['paragraphs']
     
-    srt_content = ""
-    counter = 1
 
     progress_bar.progress(55)
 
@@ -121,20 +130,77 @@ def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_ba
     api_key=google_key,
     )
 
-    chat = client.chats.create(model="gemini-2.0-flash")
-    initial_prompt = "You are a professional subtitle translator. I will give you "+ speaker_lang +" subtitle lines and you have to translate each one into **natural, conversational " + input_lang + "** and in " + input_lang + " script - suitable for dubbing. Keep it short, like it would appear in a modern " + input_lang + " novel. Avoid overly formal language unless the tone demands it. Reply with **only the translation**, no extra explanation. Choose the best translation and return only that, don't give me options. Write number in text form, for example 2020 as 'Two thousand twenty' in " + input_lang + ". If the context requires the word to stay in "+speaker_lang+", write the "+speaker_lang+" word in " + input_lang
+    chat = client.chats.create(model="gemini-2.5-flash")
+    initial_prompt = (
+        "You are a subtitle translation engine. I will give you a LIST (array) of "
+        + speaker_lang +
+        " subtitle lines.\n\n"
+
+        "Your task:\n"
+        "1. Translate EACH item into natural, conversational "
+        + input_lang +
+        " in the " + input_lang +
+        " script.\n"
+        "2. Keep tone modern, natural, suitable for dubbing.\n"
+        "3. Keep the SAME ORDER — one output item for EACH input item.\n"
+        "4. Write numbers in words (e.g., 2020 → 'Two thousand twenty').\n"
+        "5. If a word must remain in "
+        + speaker_lang +
+        ", keep it but written in " + input_lang +
+        " script.\n\n"
+
+        "CRITICAL OUTPUT RULES:\n"
+        "- ONE TRANSLATED LINE PER OUTPUT LINE.\n"
+        "- No explanations.\n"
+        "- No extra text.\n"
+        "- No numbering.\n"
+        "- No markdown.\n"
+        "- No brackets.\n"
+        "- No blank lines.\n"
+        "- No surrounding comments.\n"
+
+        "Example output:\n"
+        "Translated line 1\n"
+        "Translated line 2\n"
+        "Translated line 3\n"
+
+        "If you cannot translate a line, return an empty string for that item and move to next line.\n"
+    )
+
     response = chat.send_message(initial_prompt)
     print(response.text)
+
+    all_texts = []
+    for paragraph in paragraphs:
+        for sentence in paragraph['sentences']:
+            all_texts.append(sentence['text'])
+
+    translated_texts = translate_lines_to_hindi(all_texts, chat)
+
+    srt_content = ""
+    counter = 1
+    i=0
 
     for paragraph in paragraphs:
         for sentence in paragraph['sentences']:
             start = seconds_to_srt_time(sentence['start'])
             end = seconds_to_srt_time(sentence['end'])
-            text = sentence['text']
-            translated_text = translate_lines_to_hindi(text, chat)
+            print("writing srt for index:", i)
+            translated_text = translated_texts[i]  # get correct translated line
+            i += 1
 
             srt_content += f"{counter}\n{start} --> {end}\n{translated_text}\n\n"
             counter += 1
+            
+    # for paragraph in paragraphs:
+    #     for sentence in paragraph['sentences']:
+    #         start = seconds_to_srt_time(sentence['start'])
+    #         end = seconds_to_srt_time(sentence['end'])
+    #         text = sentence['text']
+    #         translated_text = translate_lines_to_hindi(text, chat)
+
+    #         srt_content += f"{counter}\n{start} --> {end}\n{translated_text}\n\n"
+    #         counter += 1
 
     with open(outputsrtfile, "w", encoding="utf-8") as srt_file:
         srt_file.write(srt_content)

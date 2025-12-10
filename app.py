@@ -50,7 +50,7 @@ OK_key = st.secrets["OK_KEY"]
 OK_endpoint = st.secrets["OK_ENDPOINT"]
 OK_model_name = st.secrets["OK_MODEL_NAME"]
 
-google_key = st.text_input("Enter Google API Key", type="password")
+google_key = st.secrets["GOOGLE_KEY"] # st.text_input("Enter Google API Key", type="password")
 input_lang = st.radio(
     "Select output language:",
     options=[
