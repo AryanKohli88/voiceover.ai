@@ -24,6 +24,7 @@ os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
 
 # --- 0. Test Klefki Key ---
 st.markdown("📘 Watch the <a href='https://aryankohli88.github.io/tfypdubs.html' target='_blank'><strong>Tutorial</strong></a> on how to use this tool.", unsafe_allow_html=True)
+st.markdown("Get your own <a href='https://klefkikeys.netlify.app/' target='_blank'><strong>Klefki Key</strong></a>.", unsafe_allow_html=True)
 
 klefki_key = st.text_input("Enter your Klefki API Key", type="password")
 test_button = st.button("Test My Key")
@@ -90,7 +91,7 @@ LOCK_FILE = os.path.join(tmp_dir, "demucs.lock")
 
 no_demucs_needed = False
 no_demucs_needed = st.checkbox(
-    "I do not need backgroud music as a seperate file / I have clean audio with no background noise. (Reduces time taken to half!)",
+    "Don't separate background music or noise. [Recomended for faster response - Reduces time taken by half!]",
     disabled=os.path.exists(LOCK_FILE)
 )
 
