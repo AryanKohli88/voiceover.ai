@@ -59,7 +59,7 @@ def check_and_install_demucs():
 def is_valid_integer(value):
     return value.isdigit() and int(value) > 0
 
-def main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration, OK_key, OK_endpoint, gold_user, OK_model_name):
+def main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice):
     video_dir = os.path.join("video", session_id)
 
     print(f"Using session ID {session_id}")
@@ -135,7 +135,7 @@ def main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_dem
     print(f'completed generate subs at - {t_subs_path}')
 
     progress_bar.progress(90)
-    genvoices(f"{t_subs_path}/{session_id}_translated.srt", session_id, input_lang, klefki_key, duration, OK_key, OK_endpoint, gold_user, OK_model_name)
+    genvoices(f"{t_subs_path}/{session_id}_translated.srt", session_id, input_lang, klefki_key, duration, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice)
     progress_bar.progress(100)
 
     # if os.path.exists(t_subs_path):

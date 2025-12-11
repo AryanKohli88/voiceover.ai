@@ -117,6 +117,15 @@ gold_user = st.checkbox(
 )
 if not premium_allowed:
     st.warning("⚠️ Premium voice is not available for the selected language.")
+
+female_voice = False
+if gold_user:
+    female_voice = st.checkbox(
+        "Use Female Voice",
+        key="female_voice",
+        value=False
+    )
+
 # gold_user = st.checkbox("Premium Quality Voide (Comming Soon!)", disabled=True)
 min_rate_ip = 180 # st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
 
@@ -125,7 +134,7 @@ uploaded_file = st.file_uploader("Upload an audio file", type=["wav"])
 
 
 @st.fragment    
-def process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name):
+def process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice):
     """
     Handles audio processing workflow:
     - Checks for required inputs
@@ -163,7 +172,7 @@ def process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold
     st.info("Processing... Please wait.")
     progress_bar = st.progress(0)
     
-    result = main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration, OK_key, OK_endpoint, gold_user, OK_model_name)
+    result = main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice)
     st.info(result)
         
     # Check if output exists
@@ -210,7 +219,7 @@ if st.button("Process Audio"):
             st.stop()
 
 
-    process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name)
+    process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice)
     # newsubs_parsed = parse_srt_file('./test_subs.srt')
     # test_generate_voice_overs(newsubs_parsed, "./HindiAudio.wav", 180, 111)
     # st.audio('./result/111/HindiAudio.wav', format="audio/wav")
