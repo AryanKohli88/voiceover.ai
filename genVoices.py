@@ -41,49 +41,68 @@ def get_lang_code(lang_name: str) -> str:
 def parse_srt_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
+    
+    print(f"DEBUG: File content length: {len(content)} chars")
+    print(f"DEBUG: First 200 chars:\n{repr(content[:200])}")
 
-    entries = content.strip().split('\n\n')
     parsed_subtitles = []
-
     time_pattern = re.compile(r"(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})")
+    
+    # Split by lines and process
+    lines = [line.strip() for line in content.split('\n') if line.strip()]
+    
+    i = 0
+    while i < len(lines):
+        # Look for a timestamp line
+        time_match = time_pattern.match(lines[i])
+        if time_match:
+            start_str, end_str = time_match.groups()
+            
+            def time_str_to_seconds(t):
+                dt = datetime.strptime(t, '%H:%M:%S,%f')
+                td = timedelta(hours=dt.hour, minutes=dt.minute, seconds=dt.second, microseconds=dt.microsecond)
+                return td.total_seconds()
 
-    for entry in entries:
-        lines = entry.split('\n')
-        if len(lines) >= 3:
-            time_match = time_pattern.match(lines[1])
-            if time_match:
-                start_str, end_str = time_match.groups()
-
-                def time_str_to_seconds(t):
-                    dt = datetime.strptime(t, '%H:%M:%S,%f')
-                    td = timedelta(hours=dt.hour, minutes=dt.minute, seconds=dt.second, microseconds=dt.microsecond)
-                    return td.total_seconds()
-
-                start = time_str_to_seconds(start_str)
-                end = time_str_to_seconds(end_str)
-
-                text_lines = lines[2:]
-                full_text = ' '.join(text_lines)
-
-                speaker_match = re.match(r'(Speaker\d+):\s*(.*)', full_text)
-                if speaker_match:
-                    speaker = speaker_match.group(1)
-                    text = speaker_match.group(2)
-                else:
-                    speaker = 'Speaker1'
-                    text = full_text
-
+            start = time_str_to_seconds(start_str)
+            end = time_str_to_seconds(end_str)
+            
+            # Collect text lines after timestamp (until we hit a digit or end)
+            text_lines = []
+            i += 1
+            while i < len(lines) and not lines[i][0].isdigit():
+                text_lines.append(lines[i])
+                i += 1
+            
+            full_text = ' '.join(text_lines)
+            
+            speaker_match = re.match(r'(Speaker\d+):\s*(.*)', full_text)
+            if speaker_match:
+                speaker = speaker_match.group(1)
+                text = speaker_match.group(2)
+            else:
+                speaker = 'Speaker1'
+                text = full_text
+            
+            if text.strip():  # Only add if text is not empty
                 parsed_subtitles.append((start, end, speaker, text))
+        else:
+            i += 1
 
     return parsed_subtitles
 
-def generate_voice_overs(translated_subtitles, output_file, session_id, input_lang, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice):
+def generate_voice_overs(translated_subtitles, output_file, session_id, input_lang, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice, gen_voice_failed):
     # Create the 'result' folder if it doesn't exist
+    gen_voice_failed = False
     output_folder = f"result/{session_id}"
     os.makedirs(output_folder, exist_ok=True)
     lang_code = get_lang_code(input_lang)
     if lang_code is None:
         raise ValueError(f"Unsupported language: {input_lang}")
+
+    print(f"DEBUG: translated_subtitles count = {len(translated_subtitles)}")
+    if len(translated_subtitles) == 0:
+        print("DEBUG: No subtitles found to process!")
+        return "", True
 
     combined_audio = AudioSegment.silent(duration=0)
 
@@ -93,6 +112,8 @@ def generate_voice_overs(translated_subtitles, output_file, session_id, input_la
         wanted_duration_sec = end - start
         if wanted_duration_sec <= 0 or word_count == 0:
             continue
+
+        print(f"Processing subtitle {idx}: '{text[:50]}...' Duration: {wanted_duration_sec:.2f}s")
 
         temp_mp3_path = os.path.join(output_folder, f'temp_{idx}.mp3')
         temp_sped_path = os.path.join(output_folder, f'temp_{idx}_sped.wav')
@@ -164,17 +185,12 @@ def generate_voice_overs(translated_subtitles, output_file, session_id, input_la
 
     output_path = os.path.join(output_folder, output_file)
     combined_audio.export(output_path, format="wav")
-
-    return output_path
-
-# if len(sys.argv) > 1:
-#     try:
-#         mini_rate = int(sys.argv[1])
-#         print(f"Received mini_rate: {mini_rate} and voice_index: {voice_index}")
-#     except ValueError:
-#         print("Both mini_rate and voice_index must be integers.")
-# else:
-#     print("No input provided. Usage: python app.py <mini_rate> <voice_index>")
+    combined_audio_length_ms = len(combined_audio)
+    print(f"Generated audio length: {combined_audio_length_ms}ms ({combined_audio_length_ms/1000:.2f}s)")
+    if combined_audio_length_ms < 500:
+        gen_voice_failed = True
+        print("Generated audio is too short, marking generation as failed.")
+    return output_path, gen_voice_failed
 
 def genvoices(final_subs, session_id, input_lang, klefki_key, duration, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice):
     # Call Klefki POST API
@@ -189,16 +205,35 @@ def genvoices(final_subs, session_id, input_lang, klefki_key, duration, OK_key, 
     }
 
     newsubs_parsed = parse_srt_file(final_subs)
-    generate_voice_overs(newsubs_parsed, "HindiAudio.wav", session_id, input_lang, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice)
+    print(f"DEBUG: Parsed {len(newsubs_parsed)} subtitles from {final_subs}")
+    for i, (start, end, speaker, text) in enumerate(newsubs_parsed):
+        print(f"  Subtitle {i}: {start:.2f}s - {end:.2f}s | {speaker} | {text[:50]}")
+    
+    gen_voice_failed = False
+    klefki_key_failed = False
+
+    output_path, gen_voice_failed = generate_voice_overs(newsubs_parsed, "HindiAudio.wav", session_id, input_lang, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice, gen_voice_failed)
 
     try:
         response = requests.post(api_url, json=payload)
         response.raise_for_status()  # raises exception for HTTP errors
-        print("✅ POST API response:", response.json())
+        if response.status_code == 200:
+            print("✅ Klefki POST API call successful.")
+            klefki_key_failed = False
+        else:
+            print(f"❌ Klefki POST API call failed with: {response.json()}")
+            klefki_key_failed = True
     except requests.exceptions.RequestException as e:
         print("❌ Failed to call API:", e)
 
 
     print('➡️ Next command to run:')
     print('svc infer result/HindiAudio1.wav -m G_70.pth -c config.json')
+    if klefki_key_failed:
+        return "Klefki Key validation failed."
+    if gen_voice_failed:
+        return "Voice generation failed."
+    if not os.path.exists(output_path):
+        return "Voice generation failed - output file not found."
     return 'success'
+# genvoices('./hackathon.srt', 'testsession', 'english', 'your_klefki_key', 120, 'lIHnQ9WoJrxGtxYXzQ1ZXWXAk', 'https://cloud.olakrutrim.com/v1/audio/generations/krutrim-vachak-1', True, 'krutrim-vachak-1', False)

@@ -5,10 +5,11 @@ import uuid
 import requests
 import time
 from prerun import main_func
-import os
-import streamlit as st
-import wave
 import tempfile
+import re
+from datetime import datetime, timedelta
+from genVoices import genvoices
+from helper_functions import is_valid_srt, get_duration_from_srt, process_audio, process_subtitles
 
 # from test import test_generate_voice_overs
 # from genVoices import parse_srt_file
@@ -43,6 +44,15 @@ if test_button and klefki_key:
                 st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
         except requests.exceptions.RequestException as e:
             st.error(f"❌ Error connecting to server: {e}")
+
+st.divider()
+
+# --- Input Type Selection ---
+input_type = st.radio(
+    "What do you have?",
+    options=["I have audio (.wav)", "I have subtitles (.srt)"],
+    horizontal=True
+)
 
 
 # 1. Secret Keys Input
@@ -89,118 +99,89 @@ speaker_lang = st.radio(
 tmp_dir = tempfile.gettempdir()  # usually /tmp on Linux, correct on Windows too
 LOCK_FILE = os.path.join(tmp_dir, "demucs.lock")
 
-no_demucs_needed = False
-no_demucs_needed = st.checkbox(
-    "Don't separate background music or noise. [Recomended for faster response - Reduces time taken by half!]",
-    disabled=os.path.exists(LOCK_FILE)
-)
-
-PREMIUM_LANGUAGES = {
-    "English",
-    "Hindi",
-    "Bengali",
-    "Malayalam",
-    "Marathi",
-    "Tamil",
-    "Gujarati",
-    "Telugu",
-    "Kannada",
-}
-premium_allowed = input_lang in PREMIUM_LANGUAGES
-if not premium_allowed:
-    st.session_state["gold_user"] = False
-
-gold_user = st.checkbox(
-    "Premium Quality Voice", # add link to pricing and other details
-    key="gold_user",
-    disabled=not premium_allowed
-)
-if not premium_allowed:
-    st.warning("⚠️ Premium voice is not available for the selected language.")
-
-female_voice = False
-if gold_user:
-    female_voice = st.checkbox(
-        "Use Female Voice",
-        key="female_voice",
-        value=False
+# --- Show different options based on input type ---
+if input_type == "I have audio (.wav)":
+    no_demucs_needed = False
+    no_demucs_needed = st.checkbox(
+        "Don't separate background music or noise. [Recomended for faster response - Reduces time taken by half!]",
+        disabled=os.path.exists(LOCK_FILE)
     )
-
-# gold_user = st.checkbox("Premium Quality Voide (Comming Soon!)", disabled=True)
-min_rate_ip = 180 # st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
-
-# 2. File Upload
-uploaded_file = st.file_uploader("Upload an audio file", type=["wav"])
-
-
-@st.fragment    
-def process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice):
-    """
-    Handles audio processing workflow:
-    - Checks for required inputs
-    - Saves uploaded file
-    - Sets up session directories
-    - Runs prerun.py
-    - Displays and allows download of results and stems
-    """
-    if not (deep_key and google_key and uploaded_file):
-        st.warning("Please provide all values and upload a file.")
-        return
-
-    print("starting to process audio file")
-
-    # Define directories based on session ID
-    video_dir = os.path.join("video", session_id)
-    result_dir = os.path.join("result", session_id)
-    stems_dir = os.path.join("separated", "htdemucs", session_id)
-
-    # Create directories
-    os.makedirs(video_dir, exist_ok=True)
-    os.makedirs(result_dir, exist_ok=True)
-    os.makedirs(stems_dir, exist_ok=True)
-
-    # Save the uploaded file to ./video/<session_id>/<session_id>.wav
-    input_path = os.path.join(video_dir, f"{session_id}.wav")
-    with open(input_path, "wb") as f:
-        f.write(uploaded_file.read())
-
-    duration = 0
-    with wave.open(input_path, "rb") as audio:
-        duration = audio.getnframes() / audio.getframerate()
-
-    # Run prerun.py
-    st.info("Processing... Please wait.")
-    progress_bar = st.progress(0)
     
-    result = main_func(session_id, deep_key, google_key, progress_bar, input_lang, no_demucs_needed, klefki_key, speaker_lang, duration, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice)
-    st.info(result)
-        
-    # Check if output exists
-    result_path = os.path.join(result_dir, "HindiAudio.wav")
-    if os.path.exists(result_path):
-        st.success("Audio processing complete!")
+    PREMIUM_LANGUAGES = {
+        "English",
+        "Hindi",
+        "Bengali",
+        "Malayalam",
+        "Marathi",
+        "Tamil",
+        "Gujarati",
+        "Telugu",
+        "Kannada",
+    }
+    premium_allowed = input_lang in PREMIUM_LANGUAGES
+    if not premium_allowed:
+        st.session_state["gold_user"] = False
 
-        # Show and allow download of main audio output
-        with open(result_path, "rb") as audio_file:
-            audio_bytes = audio_file.read()
-            st.audio(audio_bytes, format="audio/wav")
+    gold_user = st.checkbox(
+        "Premium Quality Voice", # add link to pricing and other details
+        key="gold_user",
+        disabled=not premium_allowed
+    )
+    if not premium_allowed:
+        st.warning("⚠️ Premium voice is not available for the selected language.")
 
-        # Download options for stems
-        stems = ["bass.wav", "drums.wav", "other.wav", "vocals.wav"]
+    female_voice = False
+    if gold_user:
+        female_voice = st.checkbox(
+            "Use Female Voice",
+            key="female_voice",
+            value=False
+        )
 
-        for stem in stems:
-            stem_path = os.path.join(stems_dir, stem)
-            if os.path.exists(stem_path):
-                with open(stem_path, "rb") as f:
-                    file_data = f.read()
-                st.audio(file_data, format="audio/wav")
-            else:
-                print("stem doesn't exist")
-    else:
-        st.error(f"Processing failed. File not found at '{result_path}'. \nIn case of any issue please save this sessions id - {session_id}. This helps.")
+    min_rate_ip = 180 # st.text_input("Enter minimum rate of speech (Recommended value - 180)", type="default")
+
+    # 2. File Upload
+    uploaded_file = st.file_uploader("Upload an audio file", type=["wav"])
+
+else:  # I have subtitles
+    no_demucs_needed = True
+    
+    PREMIUM_LANGUAGES = {
+        "English",
+        "Hindi",
+        "Bengali",
+        "Malayalam",
+        "Marathi",
+        "Tamil",
+        "Gujarati",
+        "Telugu",
+        "Kannada",
+    }
+    premium_allowed = input_lang in PREMIUM_LANGUAGES
+    if not premium_allowed:
+        st.session_state["gold_user"] = False
+
+    gold_user = st.checkbox(
+        "Premium Quality Voice", # add link to pricing and other details
+        key="gold_user",
+        disabled=not premium_allowed
+    )
+    if not premium_allowed:
+        st.warning("⚠️ Premium voice is not available for the selected language.")
+
+    female_voice = False
+    if gold_user:
+        female_voice = st.checkbox(
+            "Use Female Voice",
+            key="female_voice",
+            value=False
+        )
+    
+    # File Upload for subtitles
+    uploaded_file = st.file_uploader("Upload your subtitles", type=["srt"])
 
 
-if st.button("Process Audio"):
+if st.button("Process Audio" if input_type == "I have audio (.wav)" else "Generate Audio"):
 
     with st.spinner("Verifying your key..."):
         try:
@@ -218,9 +199,7 @@ if st.button("Process Audio"):
             st.error(f"❌ Error connecting to server: {e}")
             st.stop()
 
-
-    process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice)
-    # newsubs_parsed = parse_srt_file('./test_subs.srt')
-    # test_generate_voice_overs(newsubs_parsed, "./HindiAudio.wav", 180, 111)
-    # st.audio('./result/111/HindiAudio.wav', format="audio/wav")
-    # print("done")
+    if input_type == "I have audio (.wav)":
+        process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice, session_id, no_demucs_needed, klefki_key, speaker_lang, input_lang, main_func)
+    else:
+        process_subtitles(uploaded_file, input_lang, gold_user, OK_key, OK_endpoint, OK_model_name, female_voice, session_id, klefki_key)
