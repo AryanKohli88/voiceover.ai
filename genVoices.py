@@ -214,17 +214,17 @@ def genvoices(final_subs, session_id, input_lang, klefki_key, duration, OK_key, 
 
     output_path, gen_voice_failed = generate_voice_overs(newsubs_parsed, "HindiAudio.wav", session_id, input_lang, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice, gen_voice_failed)
 
-    try:
-        response = requests.post(api_url, json=payload)
-        response.raise_for_status()  # raises exception for HTTP errors
-        if response.status_code == 200:
-            print("✅ Klefki POST API call successful.")
-            klefki_key_failed = False
-        else:
-            print(f"❌ Klefki POST API call failed with: {response.json()}")
-            klefki_key_failed = True
-    except requests.exceptions.RequestException as e:
-        print("❌ Failed to call API:", e)
+    # try:
+    #     response = requests.post(api_url, json=payload)
+    #     response.raise_for_status()  # raises exception for HTTP errors
+    #     if response.status_code == 200:
+    #         print("✅ Klefki POST API call successful.")
+    #         klefki_key_failed = False
+    #     else:
+    #         print(f"❌ Klefki POST API call failed with: {response.json()}")
+    #         klefki_key_failed = True
+    # except requests.exceptions.RequestException as e:
+    #     print("❌ Failed to call API:", e)
 
 
     print('➡️ Next command to run:')

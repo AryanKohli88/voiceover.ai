@@ -24,28 +24,26 @@ session_id = str(uuid.uuid4())[:8]
 os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
 
 # --- 0. Test Klefki Key ---
-st.markdown("📘 Watch the <a href='https://aryankohli88.github.io/tfypdubs.html' target='_blank'><strong>Tutorial</strong></a> on how to use this tool.", unsafe_allow_html=True)
-st.markdown("Get your own <a href='https://klefkikeys.netlify.app/' target='_blank'><strong>Klefki Key</strong></a>.", unsafe_allow_html=True)
+# st.markdown("📘 Watch the <a href='https://aryankohli88.github.io/tfypdubs.html' target='_blank'><strong>Tutorial</strong></a> on how to use this tool.", unsafe_allow_html=True)
+st.markdown("Host and monetise your app on <a href='https://klefkikeys.netlify.app/' target='_blank'><strong>KlefkiKeys</strong></a>.", unsafe_allow_html=True)
 
-klefki_key = st.text_input("Enter your Klefki API Key", type="password")
-test_button = st.button("Test My Key")
+klefki_key = 'kleki-key' # st.text_input("Enter your Klefki API Key", type="password")
 
-if test_button and klefki_key:
-    with st.spinner("Verifying your key..."):
-        try:
-            response = requests.get(
-                "https://klefki-backend-fra.onrender.com/api/validate/ukk",  # replace with your actual endpoint
-                json={"key": klefki_key},
-                timeout=10
-            )
-            if response.status_code == 200:
-                st.success("✅ Key is valid!")
-            else:
-                st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            st.error(f"❌ Error connecting to server: {e}")
 
-st.divider()
+# if test_button and klefki_key:
+#     with st.spinner("Verifying your key..."):
+#         try:
+#             response = requests.get(
+#                 "https://klefki-backend-fra.onrender.com/api/validate/ukk",  # replace with your actual endpoint
+#                 json={"key": klefki_key},
+#                 timeout=10
+#             )
+#             if response.status_code == 200:
+#                 st.success("✅ Key is valid!")
+#             else:
+#                 st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
+#         except requests.exceptions.RequestException as e:
+#             st.error(f"❌ Error connecting to server: {e}")
 
 # --- Input Type Selection ---
 input_type = st.radio(
@@ -183,21 +181,21 @@ else:  # I have subtitles
 
 if st.button("Process Audio" if input_type == "I have audio (.wav)" else "Generate Audio"):
 
-    with st.spinner("Verifying your key..."):
-        try:
-            response = requests.get(
-                "https://klefki-backend-fra.onrender.com/api/validate/ukk",  # replace with your actual endpoint
-                json={"key": klefki_key},
-                timeout=10
-            )
-            if response.status_code == 200:
-                st.success("✅ Key is valid!")
-            else:
-                st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
-                st.stop()
-        except requests.exceptions.RequestException as e:
-            st.error(f"❌ Error connecting to server: {e}")
-            st.stop()
+    # with st.spinner("Verifying your key..."):
+    #     try:
+    #         response = requests.get(
+    #             "https://klefki-backend-fra.onrender.com/api/validate/ukk",  # replace with your actual endpoint
+    #             json={"key": klefki_key},
+    #             timeout=10
+    #         )
+    #         if response.status_code == 200:
+    #             st.success("✅ Key is valid!")
+    #         else:
+    #             st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
+    #             st.stop()
+    #     except requests.exceptions.RequestException as e:
+    #         st.error(f"❌ Error connecting to server: {e}")
+    #         st.stop()
 
     if input_type == "I have audio (.wav)":
         process_audio(deep_key, google_key, uploaded_file, OK_key, OK_endpoint, gold_user, OK_model_name, female_voice, session_id, no_demucs_needed, klefki_key, speaker_lang, input_lang, main_func)
