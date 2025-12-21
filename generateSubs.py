@@ -191,16 +191,6 @@ def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_ba
 
             srt_content += f"{counter}\n{start} --> {end}\n{translated_text}\n\n"
             counter += 1
-            
-    # for paragraph in paragraphs:
-    #     for sentence in paragraph['sentences']:
-    #         start = seconds_to_srt_time(sentence['start'])
-    #         end = seconds_to_srt_time(sentence['end'])
-    #         text = sentence['text']
-    #         translated_text = translate_lines_to_hindi(text, chat)
-
-    #         srt_content += f"{counter}\n{start} --> {end}\n{translated_text}\n\n"
-    #         counter += 1
 
     with open(outputsrtfile, "w", encoding="utf-8") as srt_file:
         srt_file.write(srt_content)
