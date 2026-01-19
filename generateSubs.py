@@ -167,7 +167,32 @@ def transcribe_file(outputsrtfile, session_id, deep_key, google_key, progress_ba
         "If you cannot translate a line, return an empty string for that item and move to next line.\n"
     )
 
-    response = chat.send_message(initial_prompt)
+    prompt_for_pokemon = (
+    "You are a professional Hindi dubbing scriptwriter. Translate the provided list of English lines "
+    "into natural, conversational, and modern Hindi. Follow these strict rules for every output:\n\n"
+    "1. Language Independent Words: Transliterate names and English terms into Devanagari using "
+    "modern phonetics. Use 'ऐ' (double matra) for the 'a' sound in words like 'man' (e.g., Charmander "
+    "as चारमैन्डर), whereas Shonen remains शोनेन. Use the 'ॉ' (Chandra) symbol for the open 'o' sound in words like "
+    "'pot' or 'poly' (e.g., Poliwhirl as पॉलीवर्ल). Use standard 'व' for 'w/wh' sounds. Pokeball becomes 'पोकेबॉल' and evolves becomes 'इवॉल्व्ज़'. \n"
+    "2. Tone, modern Vocabulary & Grammar: Keep the language modern and suitable for natural voice acting and dubbing. Use modern, conversational Hindi instead of textbook/formal Hindi."
+    "For example, always use 'वो' instead of 'वह' for 'he/she/that'. and write 'favourite' as फेवरेट "
+    "instead of पसंदीदा.Kangaskhan becomes कैन्‍गसख़ान. Pikachi becomes पिकाचू.\n"
+    "3. Numbers: Write all numbers out as words in the language they are spoken (e.g., 2024 as "
+    "टू थाउजेंड ट्वेंटी फोर).\n"
+    "4. English Words: If a word is better left in English for natural flow, keep it but write it "
+    "in Devanagari script.\n"
+    "5. Formatting: Provide exactly one output line for each input line. Maintain the original order. "
+    "Strictly no numbering, no markdown (no bold/italics), no brackets, no blank lines, and no "
+    "explanations. If a line cannot be translated, return an empty string for that line.\n"
+    "6. Output only the translated lines.\n\n"
+    "Example output:\n"
+    "नमस्ते आप कैसे हैं?\n"
+    "चारमैन्डर मेरा फेवरेट है\n"
+    "पॉलीवर्ल को देखो\n"
+    "मैने टू थाउजेंड ट्वेंटी में ये शुरू किया"
+)
+    
+    response = chat.send_message(prompt_for_pokemon)
     print(response.text)
 
     all_texts = []

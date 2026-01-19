@@ -9,6 +9,91 @@ import requests
 import math
 from synthesize_voice import synthesize_voice
 import time
+import subprocess, tempfile, os
+from pydub import AudioSegment
+
+def time_stretch(segment: AudioSegment, tempo: float) -> AudioSegment:
+    """
+    Uses ffmpeg atempo to stretch audio without pitch change.
+    """
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as inp:
+        segment.export(inp.name, format="wav")
+        inp_path = inp.name
+
+    out_path = inp_path.replace(".wav", "_out.wav")
+
+    subprocess.run([
+        "ffmpeg", "-y",
+        "-i", inp_path,
+        "-filter:a", f"atempo={tempo}",
+        out_path
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    stretched = AudioSegment.from_file(out_path, format="wav")
+
+    os.remove(inp_path)
+    os.remove(out_path)
+
+    return stretched
+
+def emotionise(voice_over: AudioSegment) -> AudioSegment:
+    """
+    Anime-style exaggerated emotional shaping.
+    Duration-safe. Pitch-safe.
+    """
+
+    if len(voice_over) < 5000:
+        return voice_over
+
+    # ---- Timeline (6s dialogue) ----
+    intro        = voice_over[0:900]     # I've always
+    believed     = voice_over[900:1500]  # believed
+    bridge       = voice_over[1500:2500]
+    dark_world   = voice_over[2500:3800]
+    light        = voice_over[3800:4500]
+    ending       = voice_over[4500:]
+
+    # ---- Intro: reflective ----
+    intro = time_stretch(intro, 0.96)
+    intro = intro - 1.0
+
+    # ---- Believed: conviction ----
+    believed = time_stretch(believed, 0.88)
+    believed = believed + 2.5
+    believed = believed.low_pass_filter(5500)
+
+    pause_1 = AudioSegment.silent(160)
+
+    # ---- Bridge ----
+    bridge = time_stretch(bridge, 0.97)
+
+    # ---- Dark world: despair ----
+    dark_world = time_stretch(dark_world, 0.90)
+    dark_world = dark_world - 1.5
+    dark_world = dark_world.low_pass_filter(4800)
+
+    pause_2 = AudioSegment.silent(180)
+
+    # ---- Light: hope ----
+    light = time_stretch(light, 1.06)
+    light = light + 3.0
+    light = light.high_pass_filter(3000)
+
+    # ---- Ending: warmth ----
+    ending = time_stretch(ending, 0.98)
+    ending = ending + 1.0
+
+    # ---- Rebuild ----
+    return (
+        intro +
+        pause_1 +
+        believed +
+        bridge +
+        dark_world +
+        pause_2 +
+        light +
+        ending
+    )
 
 def get_lang_code(lang_name: str) -> str:
     lang_map = {
@@ -166,6 +251,7 @@ def generate_voice_overs(translated_subtitles, output_file, session_id, input_la
             ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             print(f"Generated audio for index {idx} with playback speed {playback_speed:.2f}")
             voice_over = AudioSegment.from_file(temp_sped_path, format="wav")
+            # voice_over = emotionise(voice_over)
             # Step 3: Insert silence padding if needed
             silence_duration = start * 1000 - len(combined_audio)
             if silence_duration > 0:
