@@ -4,6 +4,7 @@ import uuid
 from prerun import main_func
 import tempfile
 from helper_functions import process_audio, process_subtitles
+import requests
 
 st.set_page_config(
     page_title="Klefki AI Translator",
@@ -18,7 +19,23 @@ os.environ["PATH"] = os.path.abspath("ffmpeg") + os.pathsep + os.environ["PATH"]
 # --- 0. Test Klefki Key ---
 st.markdown("Host and monetise your app on <a href='https://klefkikeys.netlify.app/' target='_blank'><strong>KlefkiKeys</strong></a>.", unsafe_allow_html=True)
 
-klefki_key = 'kleki-key'
+klefki_key =  st.text_input("Enter your Klefki API Key", type="password") # 'kleki-key'
+test_button = st.button("Test My Key")
+
+if test_button and klefki_key:
+    with st.spinner("Verifying your key..."):
+        try:
+            response = requests.get(
+                "https://klefki-backend-fra.onrender.com/api/validate/ukk",  # replace with your actual endpoint
+                json={"key": klefki_key},
+                timeout=10
+            )
+            if response.status_code == 200:
+                st.success("✅ Key is valid!")
+            else:
+                st.error(f"❌ Invalid key! Server responded with status {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            st.error(f"❌ Error connecting to server: {e}")
 
 # --- Input Type Selection ---
 input_type = st.radio(
